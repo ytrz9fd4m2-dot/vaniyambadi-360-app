@@ -1,30 +1,3664 @@
-{
-  "expo": {
-    "name": "vaniyambadi360-new",
-    "slug": "snack-2d829184-5299-47a3-9f20-7d1b487faec2",
-    "version": "1.0.0",
-    "orientation": "portrait",
-    "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
-    "newArchEnabled": true,
-    "splash": {
-      "image": "./assets/splash-icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
-    },
-    "ios": {
-      "supportsTablet": true
-    },
-    "android": {
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
-      },
-      "edgeToEdgeEnabled": true
-    },
-    "web": {
-      "favicon": "./assets/favicon.png"
-    },
-    "description": "Deepak "
-  }
+import React, { useMemo, useState } from "react";
+import {
+  SafeAreaView,
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  ScrollView,
+  StyleSheet,
+  Linking,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+} from "react-native";
+
+/* =========================================================
+   VANIYAMBADI 360
+   VANIYAMBADI.83
+   LOCAL, ALL AROUND
+
+   PUBLIC  = FREE
+   ADMIN PIN = 360ADMIN
+
+   Prototype:
+   - Member
+   - Shop Owner
+   - Admin
+   - Posts
+   - Photos
+   - Reels
+   - Membership ₹300
+========================================================= */
+
+const ADMIN_PIN = "360ADMIN";
+
+/* =========================================================
+   OLD / ORIGINAL CATEGORY ICONS
+========================================================= */
+
+const CATEGORIES = [
+  ["all", "🔎", "All"],
+  ["locations", "📍", "Locations / ஊர்கள்"],
+  ["hospital", "🏥", "Hospitals"],
+  ["clinic", "🩺", "Clinics"],
+  ["school", "🏫", "Schools"],
+  ["college", "🎓", "Colleges"],
+  ["hotel", "🍴", "Hotels"],
+  ["lodge", "🏨", "Lodges"],
+  ["agency", "🏢", "Agencies"],
+  ["delivery", "🛵", "Delivery / Courier"],
+  ["supermarket", "🛒", "Super Markets"],
+  ["shop", "🏪", "Shops"],
+  ["petrol", "⛽", "Petrol Bunks"],
+  ["bank", "🏦", "Banks"],
+  ["atm", "🏧", "ATMs"],
+  ["salon", "💇", "Salon"],
+  ["temple", "🛕", "Temples"],
+  ["railway", "🚉", "Railway"],
+  ["highway", "🛣️", "Highway"],
+  ["gold", "🥇", "Gold Rate"],
+  ["reels", "🎬", "Reels"],
+  ["offers", "🎁", "Offers"],
+  ["government", "🏛️", "Government"],
+  ["emergency", "🚨", "Emergency"],
+];
+
+/* =========================================================
+   ORIGINAL DATA
+========================================================= */
+
+const LOCATIONS = [
+  ["Vaniyambadi", "வாணியம்பாடி"],
+  ["Mettupalayam", "மேட்டுப்பாளையம்"],
+  ["Pallipattu", "பள்ளிப்பட்டு"],
+  ["Udayendiram", "உதயந்திரம்"],
+  ["Jabrapath", "ஜாப்ராபாத்"],
+  ["Madanancheri", "மதனாஞ்சேரி"],
+  ["Thumberi", "தும்பேரி"],
+  ["Thimmampettai", "திம்மாம்பேட்டை"],
+  ["Khaderpet", "காதர்பேட்டை"],
+  ["Neelfield", "நீல்ஃபீல்டு"],
+  ["Muslimpur", "முஸ்லிம்பூர்"],
+  ["Basheerabad", "பஷீராபாத்"],
+  ["Shakirabad", "ஷாகிராபாத்"],
+  ["New Town", "நியூ டவுன்"],
+  ["Perumalpet", "பெருமாள்பேட்டை"],
+  ["Pudur", "புதூர்"],
+  ["Konamedu", "கோணமேடு"],
+  ["Periyapet", "பெரியபேட்டை"],
+  ["Jandamedu", "ஜண்டாமேடு"],
+  ["Valayambattu", "வளையாம்பட்டு"],
+  ["Chennampet", "சென்னாம்பேட்டை"],
+].map(([name, tamil]) => ({
+  name,
+  tamil,
+  category: "locations",
+  location: `${tamil}, Vaniyambadi`,
+  description: `${name} — ${tamil}`,
+}));
+
+const SCHOOL_NAMES = [
+  ["T.V.K.V. School", "Nethaji Nagar"],
+  ["Municipal Muslim Girls Middle School", "Fort"],
+  ["Municipal Higher Secondary School", "Gandhi Nagar"],
+  ["Madhara-Se-Ajam", "Fort"],
+  ["Municipal Hindu Primary School", "Pudur"],
+  ["T.V.K.V. Elementary School", "Fort"],
+  ["Madhare-Se-Mubithe-Am", "Neelifield"],
+  ["Madhare-Se-Mubithe-Niswan", "Neelified"],
+  ["Hindu Aided School", "Amburpet"],
+  ["Nasirel Islam School", "Muslimpur"],
+  ["Municipal Muslim Boys School", "Gandhi Nagar"],
+  ["Municipal Hindu Primary School", "Perumalpet"],
+  ["Khaderia High School", "Khaderpet"],
+  ["Municipal Hindu Primary School", "Gandhi Nagar"],
+  ["Municipal Muslim Girls Primary School", "Khaderpet"],
+  ["Municipal Hindu Primary School", "Periyapet"],
+  ["Municipal Muslim Girls Primary School", "Muslimpur"],
+  ["Municipal Muslim Girls School", "Periyapet"],
+  ["T.V.K.V. High School", "Fort"],
+  ["I.E.L.C. Aided Primary School", "Pudur"],
+  ["Khaderia Aided Primary School", "Khaderpet"],
+  ["Hindu Middle School", "Konamedu"],
+  ["Concordia Higher Secondary School", "Pudur"],
+  ["Islamiah Higher Secondary School", "Fort"],
+  ["Islamiah Girls Higher Secondary School", "Noorullahpet"],
+  ["Madhare-Se Niswan", "Muslimpur"],
+];
+
+const SCHOOLS = SCHOOL_NAMES.map(([name, location]) => ({
+  name,
+  category: "school",
+  location: `${location}, Vaniyambadi`,
+  verified: true,
+}));
+
+const COLLEGES = [
+  ["Islamiah College", "New Town, Vaniyambadi"],
+  ["Islamiah Women's College", "Perumalpet, Vaniyambadi"],
+  ["Priyadarshini College", "Vaniyambadi"],
+  ["Islamiah I.T.I.", "New Town, Vaniyambadi"],
+  ["Priyadarshini Engineering College", "Tirupattur Road side"],
+  ["Priyadarshini Polytechnic College", "Vaniyambadi area"],
+  ["Vaani College of Education", "Vaniyambadi"],
+  ["Government ITI", "Vaniyambadi"],
+  ["Ar Rahman College of Allied Health", "Pallan Khaleelur Rahman Street, Vaniyambadi"],
+  ["Annai Nursing College & Allied Health Science", "CN Annadurai Road, Vaniyambadi"],
+].map(([name, location]) => ({
+  name,
+  category: "college",
+  location,
+  verified: true,
+}));
+
+const HOSPITALS = [
+  ["Government Hospital", "Jamath Road, Vaniyambadi", "225700"],
+  ["Kafeel Emergency Care Unit", "PJN Road, Vaniyambadi", "9944238110"],
+  ["Ikram Hospital", "147, Mandi Dadamiyan Street, Neelfield", "944338668"],
+  ["Fyyaz Kamal Hospital", "24/2/1, PJN Road", "9345970089"],
+  ["Dr. Vasantha Hospital", "4/1, PJN Road", "9952778962"],
+  ["Riya Maternity Hospital", "265, PJN Road", ""],
+  ["AR Rahman Hospital", "Hameenabad, Khaderpet", ""],
+  ["Dr. Parvathi Hospital", "Malang Road, Khaderpet", ""],
+  ["David Hospital", "Railway Station Road, Vaniyambadi", ""],
+  ["Vijaya Ortho Care and Hospital", "Jamath Road, Noorullahpet", "9003622638"],
+  ["Sadha Hospital", "Bypass Road, New Town", "9994214888"],
+  ["Dr. Akbar Kouser", "New Town, Vaniyambadi", ""],
+  ["Karunai Illam", "Perumalpet, Vaniyambadi", ""],
+  ["Sugam Multi-Speciality Hospital", "CN Annadurai Road", "8111055539"],
+  ["Ayesha Hospital", "Kaniyambadi Street, Neelfield", "9894474730"],
+  ["ARSH Maternity & Surgical Care", "Mandi Street, Neelfield", "6383612329"],
+  ["A R Speciality Hospital", "CL Road, Neelfield", "8940327070"],
+  ["Care & Cure Centre", "Cutchery Road, Neelfield", "4174320206"],
+  ["Kaleef Dialysis Hospital", "Shakirabad", ""],
+  ["Azeem Multispeciality Dental Care", "Shakirabad", ""],
+  ["Arivu Dental Care", "Mandi Dhadhemiyan Street", ""],
+  ["Best Laser Dental Clinic", "CL Road, Khaderpet", ""],
+  ["Al-Ameen Unani Multispeciality Clinic", "PJN Road", "8667436515"],
+  ["Al Sadiq Multispeciality Clinic", "Basheerabad", "8610033503"],
+  ["Apollo 24|7 Lab Test Vaniyambadi", "CL Road, Khaderpet", "8045572851"],
+].map(([name, location, phone]) => ({
+  name,
+  category: "hospital",
+  location,
+  phone,
+  verified: true,
+}));
+
+const CLINICS = [
+  ["Dr. Siva Subramaniyam M.B.B.S", "Perumalpet", "8870331718"],
+  ["Dr. Tamil Selvi M.B.B.S", "New Town", "9443019307"],
+  ["Dr. Moda Amjad Basha M.B.B.S", "Neelfield", "9500912531"],
+  ["D. Ejaz Ahmed M.B.B.S", "PJN Road", "9791338545"],
+  ["Dr. Arivumani M.B.B.S", "Pudur", ""],
+  ["Ayesha Hospital Clinic", "Neelfield", "9894474730"],
+  ["Dr. Syed Farouk Ahmed M.B.B.S", "PJN Road", "9980511640"],
+].map(([name, location, phone]) => ({
+  name,
+  category: "clinic",
+  location: `${location}, Vaniyambadi`,
+  phone,
+  verified: true,
+}));
+
+const HOTELS = [
+  ["Vasantha Vihar", "15, C.N.A. Road", "Vegetarian Restaurant"],
+  ["Saravana Bhavan", "8, C.N.A. Road", "Vegetarian Restaurant"],
+  ["Khaja Hotel", "157, C.N.A. Road", "Non-Vegetarian Restaurant"],
+  ["Madras Hotel", "23, C.N.A. Road", "Non-Vegetarian Restaurant"],
+  ["Rahamathiya Hotel", "C.N.A. Road", "Non-Vegetarian Restaurant"],
+  ["Ahamathiya Hotel", "C.N.A. Road", "Non-Vegetarian Restaurant"],
+].map(([name, location, description]) => ({
+  name,
+  category: "hotel",
+  location: `${location}, Vaniyambadi`,
+  description,
+  verified: true,
+}));
+
+const LODGES = [
+  ["Municipal Lodge", "C.N.A. Road, Bus Stand"],
+  ["Kanna Lodge", "C.N.A. Road"],
+  ["Sumangali Lodge", "C.N.A. Road"],
+  ["M.R. Manson", "C.N.A. Road"],
+  ["Babu Lodge", "C.N.A. Road"],
+  ["Vetri Lodge", "C.L. Road"],
+  ["Naveen Lodge", "Madurai Street"],
+  ["Padmavathi Annamalai", "P.J.N. Road"],
+].map(([name, location]) => ({
+  name,
+  category: "lodge",
+  location: `${location}, Vaniyambadi`,
+  description: "Lodging",
+}));
+
+const AGENCIES = [
+  ["J.K. Agencies", "C.L. Road, Vaniyambadi", ""],
+  ["Rainbow", "C.L. Road, Vaniyambadi", ""],
+  ["Sathya Agencies", "CAN Road, Near Bus Stand", "+917305958985"],
+  ["Amul Distributor", "Vaniyambadi", ""],
+].map(([name, location, phone]) => ({
+  name,
+  category: "agency",
+  location,
+  phone,
+}));
+
+const DELIVERY = [
+  ["DHT Global Express International Courier", "CN Annadurai Road", "+919042577651"],
+  ["ST Courier - Vaniyambadi", "Khaderpet", "+919994859147"],
+  ["Blue Dart Express Limited", "CN Annadurai Road", "+912269751234"],
+  ["VRL Logistics Ltd", "Bypass Street", "+9118005997800"],
+  ["A1 Travels & Speed Parcel Service", "Jinnah Road", "+919514604998"],
+  ["AKR Express Parcel Service", "Konamedu", "+919443123217"],
+  ["Liberty Express", "CN Annadurai Road", "+919944729904"],
+  ["Trackon Couriers", "Khaderpet", "+914162256242"],
+].map(([name, location, phone]) => ({
+  name,
+  category: "delivery",
+  location: `${location}, Vaniyambadi`,
+  phone,
+}));
+
+const PETROL = [
+  ["Hindustan Petroleum", "Islamia College Road", "+919751190190"],
+  ["Hindustan Petroleum", "Bangalore Road", "+917601936945"],
+  ["Bharat Petroleum Petrol Pump", "Muslimpur", "+911800224344"],
+  ["Bharat Petroleum - N.S. Rajan", "Adjacent Bus Stand", "+911800224344"],
+  ["ADS Fuel Station", "Alangayam to Vaniyambadi Road", ""],
+  ["IndianOil", "Chettiyappanur, NH46", "+919443161812"],
+  ["IndianOil", "Khaderpet, Trunk Road", "+918778992329"],
+  ["IndianOil", "Satipur NH46", "+919952782133"],
+].map(([name, location, phone]) => ({
+  name,
+  category: "petrol",
+  location: `${location}, Vaniyambadi`,
+  phone,
+}));
+
+const SHOPS = [
+  ["City Supermarket", "Muslimpur / Basheerabad", "9360716622"],
+  ["OAS Supermart", "Khaderpet", "7200455455"],
+  ["Seema Super Market", "Basheerabad", "9994489658"],
+  ["Sri Saravana Super Market", "Chettiyappanur", "9443686003"],
+  ["A2Z Mart Super Market", "Khaderpet", "7010016386"],
+  ["G M C Stores", "Neelfield", "9994267502"],
+  ["Sanjay Stores", "Khaderpet", "9787460896"],
+  ["M G General Store", "Cutchery Main Road", "7010807095"],
+  ["Al Madina General Store", "Vaniyambadi", "9994033982"],
+  ["S M Salahuddin Store", "Shakirabad", "9042241977"],
+  ["Sama Store", "Muslimpur", "9366111536"],
+  ["Makka Store", "Jabrapath", ""],
+  ["Mani Departments", "Bus Stand", ""],
+  ["Tindivanam Silks", "C.L. Road", ""],
+  ["Seematti Silks", "C.L. Road", ""],
+].map(([name, location, phone]) => ({
+  name,
+  category: name.toLowerCase().includes("market") ? "supermarket" : "shop",
+  location: `${location}, Vaniyambadi`,
+  phone,
+}));
+
+const SALONS = [
+  ["Naturals Salon", "Teachers Colony", "6383103066"],
+  ["Mahi Maa Beauty Parlour", "Pudur", "9150396088"],
+  ["Darpan Beauty Clinic & Parlour", "Amburpet", "9442059119"],
+  ["Pooja Beauty Parlour", "Jinnah Road", "8754892009"],
+  ["Studio 27 Unisex Salon", "Vaniyambadi", ""],
+  ["Shine Gents Hair Salon", "Vaniyambadi", ""],
+  ["Nowmi Men Salon", "Vaniyambadi", ""],
+  ["M M Beauty Parlour", "Vaniyambadi", ""],
+  ["Royal Mens Beauty Saloon", "Vaniyambadi", ""],
+].map(([name, location, phone]) => ({
+  name,
+  category: "salon",
+  location,
+  phone,
+}));
+
+const TEMPLES = [
+  ["Sri Athitheeswara Swamy Temple", "Old Vaniyambadi", "9994107395"],
+  ["Sri Azhagu Perumal Temple", "D. Periyapettai", "9743955052"],
+  ["Puthu Mariyamman Kovil", "New Town", ""],
+  ["Sri Ettiyamman Temple", "Old Vaniyambadi", ""],
+  ["Sri Vettuvanam Ellaiyamman Temple", "Old Vaniyambadi", ""],
+  ["Balamurugan Temple", "Valayambattu", ""],
+  ["Sri Panduranga Rukmayi Temple", "Chennampet", ""],
+  ["Vetkaliyamman Temple", "Konamedu", ""],
+  ["Om Sakthi Temple", "C.L. Road", ""],
+  ["Ponni Amman Koil", "Bazaar", ""],
+  ["Lord Venkateswaran Temple", "Periyapet", ""],
+].map(([name, location, phone]) => ({
+  name,
+  category: "temple",
+  location: `${location}, Vaniyambadi`,
+  phone,
+}));
+
+const BANKS = [
+  "State Bank of India",
+  "HDFC Bank",
+  "ICICI Bank",
+  "Canara Bank",
+  "Indian Overseas Bank",
+  "Karur Vysya Bank",
+  "Axis Bank",
+].map((name) => ({
+  name,
+  category: "bank",
+  location: "Vaniyambadi",
+}));
+
+const ATMS = [
+  "SBI ATM",
+  "ICICI Bank ATM",
+  "HDFC Bank ATM",
+  "Axis Bank ATM",
+  "City Union Bank ATM",
+].map((name) => ({
+  name,
+  category: "atm",
+  location: "Vaniyambadi",
+}));
+
+const EXTRA = [
+  ["Vaniyambadi Railway Station", "railway", "Vaniyambadi", "232308"],
+  ["Vaniyambadi - Bengaluru Highway", "highway", "NH48 / Bengaluru Road side", ""],
+  ["Vaniyambadi - Chennai Highway", "highway", "NH48 / Chennai direction", ""],
+  ["Today's Gold Rate", "gold", "Vaniyambadi", ""],
+  ["Vaniyambadi 360 Offers", "offers", "Vaniyambadi", ""],
+  ["Vaniyambadi 360 Reels", "reels", "Vaniyambadi", ""],
+].map(([name, category, location, phone]) => ({
+  name,
+  category,
+  location,
+  phone,
+}));
+
+const GOVERNMENT = [
+  ["Aadhaar / UIDAI", "India", "1947"],
+  ["Tamil Nadu e-Sevai", "Tamil Nadu", "18004256000"],
+  ["Vaniyambadi Municipality", "Vaniyambadi", "04174235317"],
+  ["Vaniyambadi Taluk Office", "Vaniyambadi", "232184"],
+  ["Police Station", "Vaniyambadi", "232110"],
+  ["Fire Station", "Vaniyambadi", "224101"],
+  ["Railway Station", "Vaniyambadi", "232308"],
+  ["Government Hospital", "Vaniyambadi", "225700"],
+  ["Electricity Board", "Vaniyambadi", "224339"],
+  ["Municipal Office", "Vaniyambadi", "235317"],
+  ["Municipal Commissioner", "Vaniyambadi", "235408"],
+  ["Telephone Complaints", "India", "198"],
+  ["Passport Seva", "India", "18002581800"],
+  ["Voter / Election Commission", "India", "1950"],
+  ["Tamil Nadu Ration / TNPDS", "Tamil Nadu", "1967"],
+  ["Registration Department", "Tamil Nadu", "04174227222"],
+].map(([name, location, phone]) => ({
+  name,
+  category: "government",
+  location,
+  phone,
+}));
+
+const EMERGENCY = [
+  ["Emergency / Unified", "India", "112"],
+  ["Police", "India", "100"],
+  ["Fire & Rescue", "India", "101"],
+  ["Ambulance", "India", "108"],
+  ["Ambulance", "India", "102"],
+  ["Child Helpline", "India", "1098"],
+  ["Women Helpline", "India", "1091"],
+  ["Disaster Control Room", "Tamil Nadu", "1077"],
+  ["State Control Room", "Tamil Nadu", "1070"],
+  ["Police WhatsApp", "Tirupattur District", "9092700100"],
+].map(([name, location, phone]) => ({
+  name,
+  category: "emergency",
+  location,
+  phone,
+}));
+
+const INITIAL_DATA = [
+  ...LOCATIONS,
+  ...SCHOOLS,
+  ...COLLEGES,
+  ...HOSPITALS,
+  ...CLINICS,
+  ...HOTELS,
+  ...LODGES,
+  ...AGENCIES,
+  ...DELIVERY,
+  ...PETROL,
+  ...SHOPS,
+  ...SALONS,
+  ...TEMPLES,
+  ...BANKS,
+  ...ATMS,
+  ...EXTRA,
+  ...GOVERNMENT,
+  ...EMERGENCY,
+];
+
+/* =========================================================
+   HELPERS
+========================================================= */
+
+function categoryInfo(id) {
+  return CATEGORIES.find((x) => x[0] === id);
 }
+
+function callNumber(phone) {
+  if (!phone) {
+    Alert.alert("Phone", "Number not available.");
+    return;
+  }
+
+  Linking.openURL(
+    `tel:${String(phone).replace(/[^\d+]/g, "")}`
+  );
+}
+
+function openWhatsApp(phone) {
+  if (!phone) {
+    Alert.alert("WhatsApp", "WhatsApp number not available.");
+    return;
+  }
+
+  let n = String(phone).replace(/[^\d]/g, "");
+
+  if (n.length === 10) n = "91" + n;
+  if (n.startsWith("0")) n = "91" + n.substring(1);
+
+  Linking.openURL(`https://wa.me/${n}`);
+}
+
+function openMap(item) {
+  const q = encodeURIComponent(
+    `${item.name} ${item.location} Vaniyambadi Tamil Nadu`
+  );
+
+  Linking.openURL(
+    `https://www.google.com/maps/search/?api=1&query=${q}`
+  );
+}
+
+/* =========================================================
+   PREMIUM ICON
+========================================================= */
+
+function PremiumIcon({ icon, size = 56 }) {
+  return (
+    <View
+      style={[
+        styles.iconCircle,
+        {
+          width: size,
+          height: size,
+          borderRadius: size / 2,
+        },
+      ]}
+    >
+      <Text style={{ fontSize: size * 0.45 }}>{icon}</Text>
+    </View>
+  );
+}
+
+/* =========================================================
+   HEADER
+========================================================= */
+
+function Header({ onAdmin }) {
+  return (
+    <View style={styles.header}>
+      <View>
+        <Text style={styles.brand}>VANIYAMBADI 360</Text>
+        <Text style={styles.brand83}>VANIYAMBADI.83</Text>
+        <Text style={styles.tagline}>LOCAL, ALL AROUND</Text>
+      </View>
+
+      <TouchableOpacity
+        style={styles.adminSmall}
+        onPress={onAdmin}
+      >
+        <Text style={styles.adminSmallIcon}>⚙️</Text>
+        <Text style={styles.adminSmallText}>ADMIN</Text>
+      </TouchableOpacity>
+    </View>
+  );
+}
+
+/* =========================================================
+   ACTION BUTTON
+========================================================= */
+
+function ActionButton({ icon, title, onPress, type = "normal" }) {
+  return (
+    <TouchableOpacity
+      style={[
+        styles.actionButton,
+        type === "danger" && styles.actionDanger,
+        type === "green" && styles.actionGreen,
+      ]}
+      onPress={onPress}
+    >
+      <Text style={styles.actionIcon}>{icon}</Text>
+      <Text style={styles.actionText}>{title}</Text>
+    </TouchableOpacity>
+  );
+}
+
+/* =========================================================
+   LISTING CARD
+========================================================= */
+
+function ListingCard({
+  item,
+  onAdminEdit,
+  favourite,
+  onFavourite,
+}) {
+  const info = categoryInfo(item.category);
+
+  return (
+    <View style={styles.card}>
+      <View style={styles.cardTop}>
+        <PremiumIcon
+          icon={info ? info[1] : "📌"}
+          size={54}
+        />
+
+        <View style={{ flex: 1, marginLeft: 12 }}>
+          <View style={styles.nameRow}>
+            <Text style={styles.cardTitle}>
+              {item.name}
+            </Text>
+
+            <TouchableOpacity onPress={onFavourite}>
+              <Text style={styles.heart}>
+                {favourite ? "❤️" : "♡"}
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          {item.verified && (
+            <Text style={styles.verified}>
+              ✓ VERIFIED
+            </Text>
+          )}
+
+          <Text style={styles.cardLocation}>
+            📍 {item.location}
+          </Text>
+        </View>
+      </View>
+
+      {!!item.description && (
+        <Text style={styles.description}>
+          {item.description}
+        </Text>
+      )}
+
+      {!!item.hours && (
+        <Text style={styles.meta}>🕐 {item.hours}</Text>
+      )}
+
+      {!!item.rating && (
+        <Text style={styles.meta}>
+          ⭐ {item.rating} ({item.reviews || 0} reviews)
+        </Text>
+      )}
+
+      {!!item.offer && (
+        <View style={styles.offer}>
+          <Text style={styles.offerText}>
+            🎁 {item.offer}
+          </Text>
+        </View>
+      )}
+
+      <View style={styles.actions}>
+        {!!item.phone && (
+          <>
+            <ActionButton
+              icon="📞"
+              title="Call"
+              onPress={() => callNumber(item.phone)}
+              type="green"
+            />
+
+            <ActionButton
+              icon="💬"
+              title="WhatsApp"
+              onPress={() => openWhatsApp(item.phone)}
+              type="green"
+            />
+          </>
+        )}
+
+        <ActionButton
+          icon="📍"
+          title="Map"
+          onPress={() => openMap(item)}
+        />
+
+        {onAdminEdit && (
+          <ActionButton
+            icon="✏️"
+            title="Edit"
+            onPress={onAdminEdit}
+          />
+        )}
+      </View>
+    </View>
+  );
+}
+
+/* =========================================================
+   HOME FEATURE CARD
+========================================================= */
+
+function FeatureCard({
+  icon,
+  title,
+  subtitle,
+  onPress,
+}) {
+  return (
+    <TouchableOpacity
+      style={styles.featureCard}
+      onPress={onPress}
+      activeOpacity={0.85}
+    >
+      <PremiumIcon icon={icon} size={58} />
+
+      <Text style={styles.featureTitle}>
+        {title}
+      </Text>
+
+      {!!subtitle && (
+        <Text style={styles.featureSubtitle}>
+          {subtitle}
+        </Text>
+      )}
+    </TouchableOpacity>
+  );
+}
+
+/* =========================================================
+   HOME
+========================================================= */
+
+function Home({
+  setCategory,
+  openEmergency,
+  openGovernment,
+  openAdmin,
+  openScreen,
+  member,
+}) {
+  return (
+    <ScrollView
+      style={styles.page}
+      contentContainerStyle={styles.pageContent}
+      showsVerticalScrollIndicator={false}
+    >
+      <Header onAdmin={openAdmin} />
+
+      <View style={styles.hero}>
+        <Text style={styles.heroSmall}>
+          VANIYAMBADI
+        </Text>
+
+        <Text style={styles.heroTitle}>
+          LOCAL, ALL AROUND
+        </Text>
+
+        <Text style={styles.heroTamil}>
+          வாணியம்பாடி — உங்கள் உள்ளூர் தகவல் மையம்
+        </Text>
+
+        <View style={styles.freeBadge}>
+          <Text style={styles.freeText}>
+            ✓ PUBLIC ACCESS — FREE
+          </Text>
+        </View>
+      </View>
+
+      {/* MEMBER / OWNER */}
+
+      <View style={styles.sectionHeader}>
+        <Text style={styles.sectionTitle}>
+          👤 Account & Business
+        </Text>
+      </View>
+
+      <View style={styles.twoColumns}>
+        <FeatureCard
+          icon="👤"
+          title="Member"
+          subtitle={
+            member
+              ? "My Profile"
+              : "Join / Login"
+          }
+          onPress={() => openScreen("member")}
+        />
+
+        <FeatureCard
+          icon="🏪"
+          title="Shop Owner"
+          subtitle="My Shop"
+          onPress={() => openScreen("owner")}
+        />
+      </View>
+
+      {/* CONTENT */}
+
+      <View style={styles.sectionHeader}>
+        <Text style={styles.sectionTitle}>
+          ✨ Vaniyambadi Features
+        </Text>
+      </View>
+
+      <View style={styles.featureGrid}>
+        <FeatureCard
+          icon="🎬"
+          title="Reels"
+          subtitle="Short Videos"
+          onPress={() => openScreen("reels")}
+        />
+
+        <FeatureCard
+          icon="📷"
+          title="Photos"
+          subtitle="Local Photos"
+          onPress={() => openScreen("photos")}
+        />
+
+        <FeatureCard
+          icon="📝"
+          title="Posts"
+          subtitle="Create & Publish"
+          onPress={() => openScreen("posts")}
+        />
+
+        <FeatureCard
+          icon="🛒"
+          title="Shopping"
+          subtitle="Shops & Products"
+          onPress={() => setCategory("shop")}
+        />
+
+        <FeatureCard
+          icon="🏥"
+          title="Hospital"
+          subtitle="Hospitals"
+          onPress={() => setCategory("hospital")}
+        />
+
+        <FeatureCard
+          icon="🏫"
+          title="School"
+          subtitle="Schools"
+          onPress={() => setCategory("school")}
+        />
+
+        <FeatureCard
+          icon="⛽"
+          title="Petrol"
+          subtitle="Petrol Bunks"
+          onPress={() => setCategory("petrol")}
+        />
+
+        <FeatureCard
+          icon="🍴"
+          title="Hotels"
+          subtitle="Food & Stay"
+          onPress={() => setCategory("hotel")}
+        />
+      </View>
+
+      {/* SERVICES */}
+
+      <View style={styles.sectionHeader}>
+        <Text style={styles.sectionTitle}>
+          📍 Local Services
+        </Text>
+      </View>
+
+      <View style={styles.featureGrid}>
+        <FeatureCard
+          icon="📍"
+          title="Locations"
+          subtitle="ஊர்கள்"
+          onPress={() => setCategory("locations")}
+        />
+
+        <FeatureCard
+          icon="📞"
+          title="Calls"
+          subtitle="Contact Shops"
+          onPress={() => setCategory("shop")}
+        />
+
+        <FeatureCard
+          icon="💬"
+          title="WhatsApp"
+          subtitle="Direct Contact"
+          onPress={() => setCategory("shop")}
+        />
+
+        <FeatureCard
+          icon="🏛️"
+          title="Government"
+          subtitle="Government Help"
+          onPress={openGovernment}
+        />
+      </View>
+
+      {/* EMERGENCY */}
+
+      <TouchableOpacity
+        style={styles.emergencyBox}
+        onPress={openEmergency}
+      >
+        <PremiumIcon icon="🚨" size={62} />
+
+        <View style={{ flex: 1, marginLeft: 14 }}>
+          <Text style={styles.emergencyTitle}>
+            Emergency Help
+          </Text>
+
+          <Text style={styles.emergencySub}>
+            Hospital • Police • Ambulance • Fire
+          </Text>
+
+          <Text style={styles.emergencyTamil}>
+            அவசர உதவி எண்கள்
+          </Text>
+        </View>
+
+        <Text style={styles.arrow}>›</Text>
+      </TouchableOpacity>
+
+      {/* ADMIN */}
+
+      <View style={styles.adminPanelPreview}>
+        <Text style={styles.adminPreviewTitle}>
+          ⚙️ ADMIN CONTROL
+        </Text>
+
+        <Text style={styles.adminPreviewText}>
+          Add • Edit • Delete • Categories • Shops •
+          Members • Owners • Posts • Photos • Reels
+        </Text>
+
+        <TouchableOpacity
+          style={styles.adminOpenButton}
+          onPress={openAdmin}
+        >
+          <Text style={styles.adminOpenText}>
+            Open Admin Control →
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* MEMBERSHIP */}
+
+      <TouchableOpacity
+        style={styles.membershipBanner}
+        onPress={() => openScreen("membership")}
+      >
+        <Text style={styles.membershipIcon}>💎</Text>
+
+        <View style={{ flex: 1 }}>
+          <Text style={styles.membershipTitle}>
+            SHOP OWNER MEMBERSHIP
+          </Text>
+
+          <Text style={styles.membershipPrice}>
+            ₹300 / MONTH
+          </Text>
+
+          <Text style={styles.membershipSub}>
+            Photos • Posts • Reels • Shop Control
+          </Text>
+        </View>
+
+        <Text style={styles.arrow}>›</Text>
+      </TouchableOpacity>
+
+      {/* OLD CATEGORY GRID */}
+
+      <View style={styles.sectionHeader}>
+        <Text style={styles.sectionTitle}>
+          📚 Explore Categories
+        </Text>
+      </View>
+
+      <View style={styles.categoryGrid}>
+        {CATEGORIES
+          .filter(
+            (x) =>
+              ![
+                "all",
+                "government",
+                "emergency",
+              ].includes(x[0])
+          )
+          .map((c) => (
+            <TouchableOpacity
+              key={c[0]}
+              style={styles.categoryBox}
+              onPress={() => setCategory(c[0])}
+            >
+              <PremiumIcon icon={c[1]} size={48} />
+
+              <Text style={styles.categoryText}>
+                {c[2]}
+              </Text>
+            </TouchableOpacity>
+          ))}
+      </View>
+
+      <View style={styles.footer}>
+        <Text style={styles.footerBrand}>
+          VANIYAMBADI 360
+        </Text>
+
+        <Text style={styles.footerText}>
+          VANIYAMBADI.83 • LOCAL, ALL AROUND
+        </Text>
+      </View>
+    </ScrollView>
+  );
+}
+
+/* =========================================================
+   DIRECTORY
+========================================================= */
+
+function Directory({
+  data,
+  category,
+  setCategory,
+  search,
+  setSearch,
+  favourites,
+  toggleFavourite,
+  admin,
+  openEdit,
+}) {
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+
+    return data.filter((item) => {
+      const categoryMatch =
+        category === "all" ||
+        item.category === category;
+
+      if (!categoryMatch) return false;
+
+      if (!q) return true;
+
+      return (
+        String(item.name || "")
+          .toLowerCase()
+          .includes(q) ||
+        String(item.location || "")
+          .toLowerCase()
+          .includes(q) ||
+        String(item.description || "")
+          .toLowerCase()
+          .includes(q)
+      );
+    });
+  }, [data, category, search]);
+
+  return (
+    <ScrollView
+      style={styles.page}
+      contentContainerStyle={styles.pageContent}
+    >
+      <Text style={styles.screenTitle}>
+        🔎 Search Directory
+      </Text>
+
+      <Text style={styles.screenSub}>
+        {filtered.length} results
+      </Text>
+
+      <TextInput
+        value={search}
+        onChangeText={setSearch}
+        placeholder="எதை தேடுகிறீர்கள்?"
+        placeholderTextColor="#94a3b8"
+        style={styles.searchInput}
+      />
+
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={{ marginBottom: 14 }}
+      >
+        {CATEGORIES.map((c) => (
+          <TouchableOpacity
+            key={c[0]}
+            style={[
+              styles.chip,
+              category === c[0] && styles.chipActive,
+            ]}
+            onPress={() => setCategory(c[0])}
+          >
+            <Text style={styles.chipIcon}>
+              {c[1]}
+            </Text>
+
+            <Text
+              style={[
+                styles.chipText,
+                category === c[0] &&
+                  styles.chipTextActive,
+              ]}
+            >
+              {c[2]}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
+
+      {filtered.map((item, index) => (
+        <ListingCard
+          key={`${item.name}-${index}`}
+          item={item}
+          favourite={!!favourites[item.name]}
+          onFavourite={() =>
+            toggleFavourite(item.name)
+          }
+          onAdminEdit={
+            admin
+              ? () => openEdit(item, index)
+              : undefined
+          }
+        />
+      ))}
+    </ScrollView>
+  );
+}
+
+/* =========================================================
+   MEMBER AUTH
+========================================================= */
+
+function MemberAuth({ onSuccess, onCancel }) {
+  const [mode, setMode] = useState("join");
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [area, setArea] = useState("");
+  const [password, setPassword] = useState("");
+
+  function submit() {
+    if (!phone.trim() || !password.trim()) {
+      Alert.alert(
+        "Member",
+        "Mobile மற்றும் Password உள்ளிடவும்."
+      );
+      return;
+    }
+
+    if (mode === "join" && !name.trim()) {
+      Alert.alert("Member", "Name தேவை.");
+      return;
+    }
+
+    Alert.alert(
+      mode === "join" ? "Welcome 🎉" : "Login",
+      "Prototype account successful.",
+      [
+        {
+          text: "Continue",
+          onPress: () =>
+            onSuccess({
+              name:
+                name.trim() || "Member",
+              phone: phone.trim(),
+              area:
+                area.trim() || "Vaniyambadi",
+            }),
+        },
+      ]
+    );
+  }
+
+  return (
+    <SafeAreaView style={styles.safe}>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={
+          Platform.OS === "ios"
+            ? "padding"
+            : undefined
+        }
+      >
+        <ScrollView
+          contentContainerStyle={styles.authPage}
+        >
+          <TouchableOpacity onPress={onCancel}>
+            <Text style={styles.back}>‹ Back</Text>
+          </TouchableOpacity>
+
+          <PremiumIcon icon="👤" size={88} />
+
+          <Text style={styles.authTitle}>
+            VANIYAMBADI 360
+          </Text>
+
+          <Text style={styles.authSub}>
+            {mode === "join"
+              ? "Join as Member"
+              : "Member Login"}
+          </Text>
+
+          {mode === "join" && (
+            <>
+              <Input
+                label="Full Name"
+                value={name}
+                onChange={setName}
+                placeholder="உங்கள் பெயர்"
+              />
+
+              <Input
+                label="Area / ஊர்"
+                value={area}
+                onChange={setArea}
+                placeholder="Vaniyambadi"
+              />
+            </>
+          )}
+
+          <Input
+            label="Mobile Number"
+            value={phone}
+            onChange={setPhone}
+            placeholder="Mobile Number"
+            keyboardType="phone-pad"
+          />
+
+          <Input
+            label="Password"
+            value={password}
+            onChange={setPassword}
+            placeholder="Password"
+          />
+
+          <TouchableOpacity
+            style={styles.primaryButton}
+            onPress={submit}
+          >
+            <Text style={styles.primaryButtonText}>
+              {mode === "join"
+                ? "👤 Create Member Account"
+                : "🔐 Login"}
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.switchButton}
+            onPress={() =>
+              setMode(
+                mode === "join"
+                  ? "login"
+                  : "join"
+              )
+            }
+          >
+            <Text style={styles.switchText}>
+              {mode === "join"
+                ? "Already a Member? Login"
+                : "New Member? Join Now"}
+            </Text>
+          </TouchableOpacity>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
+  );
+}
+
+/* =========================================================
+   SHOP OWNER
+========================================================= */
+
+function ShopOwner({ onBack, openScreen }) {
+  const [shopName, setShopName] = useState(
+    "My Shop"
+  );
+
+  return (
+    <ScrollView
+      style={styles.page}
+      contentContainerStyle={styles.pageContent}
+    >
+      <BackButton onPress={onBack} />
+
+      <View style={styles.ownerHero}>
+        <PremiumIcon icon="🏪" size={80} />
+
+        <Text style={styles.ownerTitle}>
+          SHOP OWNER CONTROL
+        </Text>
+
+        <Text style={styles.ownerSub}>
+          My Shop • Manage your business
+        </Text>
+      </View>
+
+      <View style={styles.ownerStatus}>
+        <Text style={styles.statusTitle}>
+          💎 Membership
+        </Text>
+
+        <Text style={styles.statusValue}>
+          ₹300 / Month
+        </Text>
+
+        <Text style={styles.statusText}>
+          Prototype membership status
+        </Text>
+
+        <TouchableOpacity
+          style={styles.smallButton}
+          onPress={() =>
+            openScreen("membership")
+          }
+        >
+          <Text style={styles.smallButtonText}>
+            Manage Membership
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      <Text style={styles.sectionTitle}>
+        🏪 My Shop
+      </Text>
+
+      <Input
+        label="Shop Name"
+        value={shopName}
+        onChange={setShopName}
+        placeholder="Shop Name"
+      />
+
+      <View style={styles.ownerGrid}>
+        <FeatureCard
+          icon="📷"
+          title="Photos"
+          subtitle="Edit Photos"
+          onPress={() => openScreen("photos")}
+        />
+
+        <FeatureCard
+          icon="📝"
+          title="Posts"
+          subtitle="Create Post"
+          onPress={() => openScreen("createPost")}
+        />
+
+        <FeatureCard
+          icon="🎬"
+          title="Reels"
+          subtitle="Upload Reel"
+          onPress={() => openScreen("reels")}
+        />
+
+        <FeatureCard
+          icon="🛒"
+          title="Products"
+          subtitle="My Products"
+          onPress={() => openScreen("products")}
+        />
+      </View>
+
+      <View style={styles.settingsBox}>
+        <Text style={styles.settingsTitle}>
+          ⚙️ Shop Owner Settings
+        </Text>
+
+        <Text style={styles.settingRow}>
+          📥 Download: ON / OFF
+        </Text>
+
+        <Text style={styles.settingRow}>
+          💬 WhatsApp Display: ON / OFF
+        </Text>
+
+        <Text style={styles.settingRow}>
+          📞 Contact Number
+        </Text>
+
+        <Text style={styles.settingRow}>
+          📍 Shop Location
+        </Text>
+
+        <Text style={styles.settingRow}>
+          🖼️ Shop Photos
+        </Text>
+      </View>
+    </ScrollView>
+  );
+}
+
+/* =========================================================
+   POSTS / PHOTOS / REELS
+========================================================= */
+
+function ContentScreen({
+  type,
+  posts,
+  onBack,
+  onCreate,
+}) {
+  const title =
+    type === "reels"
+      ? "🎬 Reels"
+      : type === "photos"
+      ? "📷 Photos"
+      : "📝 Posts";
+
+  return (
+    <ScrollView
+      style={styles.page}
+      contentContainerStyle={styles.pageContent}
+    >
+      <BackButton onPress={onBack} />
+
+      <View style={styles.contentHero}>
+        <PremiumIcon
+          icon={
+            type === "reels"
+              ? "🎬"
+              : type === "photos"
+              ? "📷"
+              : "📝"
+          }
+          size={76}
+        />
+
+        <Text style={styles.screenTitle}>
+          {title}
+        </Text>
+
+        <Text style={styles.screenSub}>
+          VANIYAMBADI.83
+        </Text>
+      </View>
+
+      <TouchableOpacity
+        style={styles.createButton}
+        onPress={onCreate}
+      >
+        <Text style={styles.createButtonText}>
+          ＋ Create New
+        </Text>
+      </TouchableOpacity>
+
+      {posts
+        .filter((p) =>
+          type === "posts"
+            ? p.type === "post"
+            : p.type === type
+        )
+        .map((p) => (
+          <View
+            key={p.id}
+            style={styles.postCard}
+          >
+            <Text style={styles.postType}>
+              {p.type === "reel"
+                ? "🎬 REEL"
+                : p.type === "photo"
+                ? "📷 PHOTO"
+                : "📝 POST"}
+            </Text>
+
+            <Text style={styles.postTitle}>
+              {p.title}
+            </Text>
+
+            {!!p.body && (
+              <Text style={styles.postBody}>
+                {p.body}
+              </Text>
+            )}
+
+            {!!p.image && (
+              <View style={styles.imagePreview}>
+                <Text style={styles.imagePreviewText}>
+                  🖼️ IMAGE
+                </Text>
+
+                <Text style={styles.imageUrl}>
+                  {p.image}
+                </Text>
+              </View>
+            )}
+
+            <Text style={styles.postLocation}>
+              📍 {p.location || "Vaniyambadi"}
+            </Text>
+          </View>
+        ))}
+
+      {posts.length === 0 && (
+        <View style={styles.empty}>
+          <Text style={styles.emptyIcon}>✨</Text>
+          <Text style={styles.emptyTitle}>
+            Nothing published yet
+          </Text>
+          <Text style={styles.emptyText}>
+            Create your first post, photo or reel.
+          </Text>
+        </View>
+      )}
+    </ScrollView>
+  );
+}
+
+/* =========================================================
+   CREATE POST
+========================================================= */
+
+function CreatePost({
+  onBack,
+  onPublish,
+  defaultType = "post",
+}) {
+  const [type, setType] = useState(defaultType);
+  const [title, setTitle] = useState("");
+  const [body, setBody] = useState("");
+  const [image, setImage] = useState("");
+  const [location, setLocation] = useState(
+    "Vaniyambadi"
+  );
+
+  function publish() {
+    if (!title.trim()) {
+      Alert.alert(
+        "Publish",
+        "Title தேவை."
+      );
+      return;
+    }
+
+    onPublish({
+      id: Date.now(),
+      type,
+      title: title.trim(),
+      body: body.trim(),
+      image: image.trim(),
+      location: location.trim(),
+    });
+
+    Alert.alert(
+      "Published 🎉",
+      "Your content has been published."
+    );
+  }
+
+  return (
+    <ScrollView
+      style={styles.page}
+      contentContainerStyle={styles.pageContent}
+    >
+      <BackButton onPress={onBack} />
+
+      <Text style={styles.screenTitle}>
+        ＋ Create Content
+      </Text>
+
+      <Text style={styles.screenSub}>
+        Post • Photo • Reel
+      </Text>
+
+      <View style={styles.typeRow}>
+        {[
+          ["post", "📝 Post"],
+          ["photo", "📷 Photo"],
+          ["reel", "🎬 Reel"],
+        ].map(([value, label]) => (
+          <TouchableOpacity
+            key={value}
+            style={[
+              styles.typeButton,
+              type === value &&
+                styles.typeButtonActive,
+            ]}
+            onPress={() => setType(value)}
+          >
+            <Text
+              style={[
+                styles.typeButtonText,
+                type === value &&
+                  styles.typeButtonTextActive,
+              ]}
+            >
+              {label}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
+      <Input
+        label="Title"
+        value={title}
+        onChange={setTitle}
+        placeholder="Post title"
+      />
+
+      <Input
+        label="Description"
+        value={body}
+        onChange={setBody}
+        placeholder="Write something..."
+        multiline
+      />
+
+      <Input
+        label="Image / Video URL"
+        value={image}
+        onChange={setImage}
+        placeholder="Paste image or video link"
+      />
+
+      <Input
+        label="Location"
+        value={location}
+        onChange={setLocation}
+        placeholder="Vaniyambadi"
+      />
+
+      <TouchableOpacity
+        style={styles.primaryButton}
+        onPress={publish}
+      >
+        <Text style={styles.primaryButtonText}>
+          🚀 Publish Now
+        </Text>
+      </TouchableOpacity>
+
+      <Text style={styles.prototypeNote}>
+        Prototype: actual image/video storage can be
+        connected later with backend storage.
+      </Text>
+    </ScrollView>
+  );
+}
+
+/* =========================================================
+   MEMBERSHIP
+========================================================= */
+
+function Membership({ onBack }) {
+  return (
+    <ScrollView
+      style={styles.page}
+      contentContainerStyle={styles.pageContent}
+    >
+      <BackButton onPress={onBack} />
+
+      <View style={styles.membershipPage}>
+        <PremiumIcon icon="💎" size={92} />
+
+        <Text style={styles.membershipBig}>
+          SHOP OWNER
+        </Text>
+
+        <Text style={styles.membershipBig}>
+          MEMBERSHIP
+        </Text>
+
+        <Text style={styles.priceBig}>
+          ₹300
+        </Text>
+
+        <Text style={styles.monthText}>
+          PER MONTH
+        </Text>
+
+        {[
+          "🏪 Shop Profile",
+          "📷 Photos",
+          "📝 Posts",
+          "🎬 Reels",
+          "🛒 Products",
+          "📍 Location",
+          "📞 Call",
+          "💬 WhatsApp",
+          "⚙️ Owner Settings",
+        ].map((x) => (
+          <View
+            key={x}
+            style={styles.benefit}
+          >
+            <Text style={styles.benefitText}>
+              ✓ {x}
+            </Text>
+          </View>
+        ))}
+
+        <TouchableOpacity
+          style={styles.upiButton}
+          onPress={() =>
+            Alert.alert(
+              "Payment",
+              "UPI / GPay integration will be connected here."
+            )
+          }
+        >
+          <Text style={styles.upiText}>
+            💳 Pay ₹300 via UPI / GPay
+          </Text>
+        </TouchableOpacity>
+
+        <Text style={styles.prototypeNote}>
+          Payment is UI-only in this prototype.
+        </Text>
+      </View>
+    </ScrollView>
+  );
+}
+
+/* =========================================================
+   ADMIN LOGIN
+========================================================= */
+
+function AdminLogin({ onSuccess, onCancel }) {
+  const [pin, setPin] = useState("");
+
+  function login() {
+    if (pin === ADMIN_PIN) {
+      onSuccess();
+    } else {
+      Alert.alert(
+        "Admin",
+        "Wrong Admin PIN."
+      );
+    }
+  }
+
+  return (
+    <SafeAreaView style={styles.safe}>
+      <ScrollView
+        contentContainerStyle={styles.authPage}
+      >
+        <TouchableOpacity onPress={onCancel}>
+          <Text style={styles.back}>
+            ‹ Back
+          </Text>
+        </TouchableOpacity>
+
+        <PremiumIcon icon="⚙️" size={90} />
+
+        <Text style={styles.authTitle}>
+          ADMIN CONTROL
+        </Text>
+
+        <Text style={styles.authSub}>
+          VANIYAMBADI 360
+        </Text>
+
+        <TextInput
+          value={pin}
+          onChangeText={setPin}
+          placeholder="Admin PIN"
+          placeholderTextColor="#94a3b8"
+          secureTextEntry
+          style={styles.input}
+        />
+
+        <TouchableOpacity
+          style={styles.primaryButton}
+          onPress={login}
+        >
+          <Text style={styles.primaryButtonText}>
+            🔐 Enter Admin
+          </Text>
+        </TouchableOpacity>
+
+        <Text style={styles.prototypeNote}>
+          Prototype Admin PIN: 360ADMIN
+        </Text>
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
+
+/* =========================================================
+   ADMIN CONTROL
+========================================================= */
+
+function AdminPanel({
+  data,
+  onAdd,
+  onEdit,
+  onDelete,
+  onBack,
+}) {
+  const [name, setName] = useState("");
+  const [location, setLocation] = useState("");
+  const [phone, setPhone] = useState("");
+  const [category, setCategory] =
+    useState("shop");
+
+  function addListing() {
+    if (!name.trim()) {
+      Alert.alert(
+        "Admin",
+        "Shop / Listing name தேவை."
+      );
+      return;
+    }
+
+    onAdd({
+      name: name.trim(),
+      category,
+      location:
+        location.trim() || "Vaniyambadi",
+      phone: phone.trim(),
+      verified: true,
+    });
+
+    setName("");
+    setLocation("");
+    setPhone("");
+
+    Alert.alert(
+      "Admin",
+      "Listing added successfully."
+    );
+  }
+
+  return (
+    <ScrollView
+      style={styles.page}
+      contentContainerStyle={styles.pageContent}
+    >
+      <BackButton onPress={onBack} />
+
+      <View style={styles.adminHero}>
+        <PremiumIcon icon="⚙️" size={82} />
+
+        <Text style={styles.adminHeroTitle}>
+          ADMIN CONTROL
+        </Text>
+
+        <Text style={styles.adminHeroSub}>
+          YOU ARE THE ADMIN
+        </Text>
+      </View>
+
+      {/* CONTROL GRID */}
+
+      <Text style={styles.sectionTitle}>
+        🛠️ Admin Powers
+      </Text>
+
+      <View style={styles.adminPowerGrid}>
+        {[
+          ["🏪", "Manage Shops"],
+          ["📚", "Categories"],
+          ["👤", "Members"],
+          ["🏪", "Shop Owners"],
+          ["📝", "Posts"],
+          ["📷", "Photos"],
+          ["🎬", "Reels"],
+          ["💎", "Membership"],
+          ["📞", "Contacts"],
+          ["📍", "Locations"],
+          ["🛒", "Products"],
+          ["⚙️", "Settings"],
+        ].map(([icon, title]) => (
+          <View
+            key={title}
+            style={styles.powerCard}
+          >
+            <Text style={styles.powerIcon}>
+              {icon}
+            </Text>
+
+            <Text style={styles.powerText}>
+              {title}
+            </Text>
+          </View>
+        ))}
+      </View>
+
+      {/* ADD */}
+
+      <View style={styles.adminForm}>
+        <Text style={styles.adminFormTitle}>
+          ＋ Add New Listing
+        </Text>
+
+        <Input
+          label="Name"
+          value={name}
+          onChange={setName}
+          placeholder="Shop / Hospital / School"
+        />
+
+        <Text style={styles.label}>
+          Category
+        </Text>
+
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={{ marginBottom: 12 }}
+        >
+          {CATEGORIES
+            .filter(
+              (x) =>
+                !["all"].includes(x[0])
+            )
+            .map((c) => (
+              <TouchableOpacity
+                key={c[0]}
+                style={[
+                  styles.chip,
+                  category === c[0] &&
+                    styles.chipActive,
+                ]}
+                onPress={() =>
+                  setCategory(c[0])
+                }
+              >
+                <Text style={styles.chipIcon}>
+                  {c[1]}
+                </Text>
+
+                <Text
+                  style={[
+                    styles.chipText,
+                    category === c[0] &&
+                      styles.chipTextActive,
+                  ]}
+                >
+                  {c[2]}
+                </Text>
+              </TouchableOpacity>
+            ))}
+        </ScrollView>
+
+        <Input
+          label="Location"
+          value={location}
+          onChange={setLocation}
+          placeholder="Vaniyambadi"
+        />
+
+        <Input
+          label="Phone"
+          value={phone}
+          onChange={setPhone}
+          placeholder="Contact Number"
+          keyboardType="phone-pad"
+        />
+
+        <TouchableOpacity
+          style={styles.primaryButton}
+          onPress={addListing}
+        >
+          <Text style={styles.primaryButtonText}>
+            ＋ Add Listing
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* LIST */}
+
+      <Text style={styles.sectionTitle}>
+        📋 Current Listings ({data.length})
+      </Text>
+
+      {data.slice(0, 60).map((item, index) => (
+        <View
+          key={`${item.name}-${index}`}
+          style={styles.adminListing}
+        >
+          <View style={{ flex: 1 }}>
+            <Text style={styles.adminListingName}>
+              {item.name}
+            </Text>
+
+            <Text style={styles.adminListingInfo}>
+              {categoryInfo(item.category)?.[1]}{" "}
+              {item.location}
+            </Text>
+          </View>
+
+          <TouchableOpacity
+            style={styles.editMini}
+            onPress={() =>
+              onEdit(item, index)
+            }
+          >
+            <Text>✏️</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.deleteMini}
+            onPress={() =>
+              onDelete(index)
+            }
+          >
+            <Text>🗑️</Text>
+          </TouchableOpacity>
+        </View>
+      ))}
+    </ScrollView>
+  );
+}
+
+/* =========================================================
+   EDIT LISTING
+========================================================= */
+
+function EditListing({
+  item,
+  onSave,
+  onDelete,
+  onBack,
+}) {
+  const [name, setName] = useState(
+    item.name || ""
+  );
+  const [location, setLocation] = useState(
+    item.location || ""
+  );
+  const [phone, setPhone] = useState(
+    item.phone || ""
+  );
+
+  return (
+    <ScrollView
+      style={styles.page}
+      contentContainerStyle={styles.pageContent}
+    >
+      <BackButton onPress={onBack} />
+
+      <Text style={styles.screenTitle}>
+        ✏️ Edit Listing
+      </Text>
+
+      <Input
+        label="Name"
+        value={name}
+        onChange={setName}
+        placeholder="Name"
+      />
+
+      <Input
+        label="Location"
+        value={location}
+        onChange={setLocation}
+        placeholder="Location"
+      />
+
+      <Input
+        label="Phone"
+        value={phone}
+        onChange={setPhone}
+        placeholder="Phone"
+      />
+
+      <TouchableOpacity
+        style={styles.primaryButton}
+        onPress={() =>
+          onSave({
+            ...item,
+            name,
+            location,
+            phone,
+          })
+        }
+      >
+        <Text style={styles.primaryButtonText}>
+          💾 Save Changes
+        </Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={styles.dangerButton}
+        onPress={() => onDelete(item)}
+      >
+        <Text style={styles.dangerText}>
+          🗑️ Delete Listing
+        </Text>
+      </TouchableOpacity>
+    </ScrollView>
+  );
+}
+
+/* =========================================================
+   GOVERNMENT / EMERGENCY
+========================================================= */
+
+function SpecialList({
+  title,
+  icon,
+  data,
+  onBack,
+}) {
+  return (
+    <ScrollView
+      style={styles.page}
+      contentContainerStyle={styles.pageContent}
+    >
+      <BackButton onPress={onBack} />
+
+      <View style={styles.specialHeader}>
+        <PremiumIcon icon={icon} size={76} />
+
+        <Text style={styles.screenTitle}>
+          {title}
+        </Text>
+      </View>
+
+      {data.map((item, index) => (
+        <ListingCard
+          key={`${item.name}-${index}`}
+          item={item}
+        />
+      ))}
+    </ScrollView>
+  );
+}
+
+/* =========================================================
+   INPUT
+========================================================= */
+
+function Input({
+  label,
+  value,
+  onChange,
+  placeholder,
+  keyboardType,
+  multiline,
+}) {
+  return (
+    <View style={{ marginBottom: 14 }}>
+      <Text style={styles.label}>
+        {label}
+      </Text>
+
+      <TextInput
+        value={value}
+        onChangeText={onChange}
+        placeholder={placeholder}
+        placeholderTextColor="#94a3b8"
+        keyboardType={keyboardType}
+        multiline={multiline}
+        style={[
+          styles.input,
+          multiline && styles.textArea,
+        ]}
+      />
+    </View>
+  );
+}
+
+/* =========================================================
+   BACK
+========================================================= */
+
+function BackButton({ onPress }) {
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      style={styles.backButton}
+    >
+      <Text style={styles.back}>
+        ‹ Back
+      </Text>
+    </TouchableOpacity>
+  );
+}
+
+/* =========================================================
+   APP
+========================================================= */
+
+export default function App() {
+  const [data, setData] =
+    useState(INITIAL_DATA);
+
+  const [tab, setTab] =
+    useState("home");
+
+  const [category, setCategory] =
+    useState("all");
+
+  const [search, setSearch] =
+    useState("");
+
+  const [admin, setAdmin] =
+    useState(false);
+
+  const [adminLogin, setAdminLogin] =
+    useState(false);
+
+  const [member, setMember] =
+    useState(null);
+
+  const [favourites, setFavourites] =
+    useState({});
+
+  const [posts, setPosts] =
+    useState([]);
+
+  const [screen, setScreen] =
+    useState(null);
+
+  const [editing, setEditing] =
+    useState(null);
+
+  function toggleFavourite(name) {
+    setFavourites((prev) => ({
+      ...prev,
+      [name]: !prev[name],
+    }));
+  }
+
+  function addListing(item) {
+    setData((prev) => [
+      item,
+      ...prev,
+    ]);
+  }
+
+  function updateListing(item) {
+    setData((prev) =>
+      prev.map((x) =>
+        x === editing?.item
+          ? item
+          : x
+      )
+    );
+
+    setEditing(null);
+  }
+
+  function deleteListing(item) {
+    Alert.alert(
+      "Delete",
+      `Delete ${item.name}?`,
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: () => {
+            setData((prev) =>
+              prev.filter(
+                (x) => x !== item
+              )
+            );
+            setEditing(null);
+          },
+        },
+      ]
+    );
+  }
+
+  function openAdmin() {
+    if (admin) {
+      setScreen("admin");
+    } else {
+      setAdminLogin(true);
+    }
+  }
+
+  function openScreen(name) {
+    setScreen(name);
+  }
+
+  function goHome() {
+    setScreen(null);
+    setTab("home");
+  }
+
+  if (adminLogin) {
+    return (
+      <AdminLogin
+        onCancel={() =>
+          setAdminLogin(false)
+        }
+        onSuccess={() => {
+          setAdminLogin(false);
+          setAdmin(true);
+          setScreen("admin");
+        }}
+      />
+    );
+  }
+
+  if (screen === "admin") {
+    return (
+      <SafeAreaView style={styles.safe}>
+        <AdminPanel
+          data={data}
+          onBack={goHome}
+          onAdd={addListing}
+          onEdit={(item) =>
+            setEditing({ item })
+          }
+          onDelete={(index) => {
+            const item = data[index];
+
+            Alert.alert(
+              "Delete",
+              `Delete ${item?.name}?`,
+              [
+                {
+                  text: "Cancel",
+                  style: "cancel",
+                },
+                {
+                  text: "Delete",
+                  style: "destructive",
+                  onPress: () =>
+                    setData((prev) =>
+                      prev.filter(
+                        (_, i) =>
+                          i !== index
+                      )
+                    ),
+                },
+              ]
+            );
+          }}
+        />
+      </SafeAreaView>
+    );
+  }
+
+  if (editing) {
+    return (
+      <SafeAreaView style={styles.safe}>
+        <EditListing
+          item={editing.item}
+          onBack={() =>
+            setEditing(null)
+          }
+          onSave={updateListing}
+          onDelete={deleteListing}
+        />
+      </SafeAreaView>
+    );
+  }
+
+  if (screen === "member") {
+    if (member) {
+      return (
+        <SafeAreaView style={styles.safe}>
+          <ScrollView
+            style={styles.page}
+            contentContainerStyle={
+              styles.pageContent
+            }
+          >
+            <BackButton onPress={goHome} />
+
+            <View style={styles.profileHero}>
+              <PremiumIcon
+                icon="👤"
+                size={90}
+              />
+
+              <Text style={styles.profileName}>
+                {member.name}
+              </Text>
+
+              <Text style={styles.profileInfo}>
+                📞 {member.phone}
+              </Text>
+
+              <Text style={styles.profileInfo}>
+                📍 {member.area}
+              </Text>
+            </View>
+
+            <FeatureCard
+              icon="❤️"
+              title="Favourite Shops"
+              subtitle="Saved listings"
+              onPress={() => {
+                setCategory("shop");
+                setTab("search");
+                setScreen(null);
+              }}
+            />
+
+            <TouchableOpacity
+              style={styles.dangerButton}
+              onPress={() =>
+                setMember(null)
+              }
+            >
+              <Text style={styles.dangerText}>
+                Logout
+              </Text>
+            </TouchableOpacity>
+          </ScrollView>
+        </SafeAreaView>
+      );
+    }
+
+    return (
+      <MemberAuth
+        onCancel={goHome}
+        onSuccess={(m) => {
+          setMember(m);
+          goHome();
+        }}
+      />
+    );
+  }
+
+  if (screen === "owner") {
+    return (
+      <SafeAreaView style={styles.safe}>
+        <ShopOwner
+          onBack={goHome}
+          openScreen={openScreen}
+        />
+      </SafeAreaView>
+    );
+  }
+
+  if (screen === "membership") {
+    return (
+      <SafeAreaView style={styles.safe}>
+        <Membership onBack={goHome} />
+      </SafeAreaView>
+    );
+  }
+
+  if (
+    screen === "posts" ||
+    screen === "photos" ||
+    screen === "reels"
+  ) {
+    return (
+      <SafeAreaView style={styles.safe}>
+        <ContentScreen
+          type={screen}
+          posts={posts}
+          onBack={goHome}
+          onCreate={() =>
+            openScreen("createPost")
+          }
+        />
+      </SafeAreaView>
+    );
+  }
+
+  if (screen === "createPost") {
+    return (
+      <SafeAreaView style={styles.safe}>
+        <CreatePost
+          onBack={goHome}
+          onPublish={(post) => {
+            setPosts((prev) => [
+              post,
+              ...prev,
+            ]);
+            goHome();
+          }}
+        />
+      </SafeAreaView>
+    );
+  }
+
+  if (screen === "products") {
+    return (
+      <SafeAreaView style={styles.safe}>
+        <ScrollView
+          style={styles.page}
+          contentContainerStyle={
+            styles.pageContent
+          }
+        >
+          <BackButton onPress={goHome} />
+
+          <Text style={styles.screenTitle}>
+            🛒 My Products
+          </Text>
+
+          <Text style={styles.screenSub}>
+            Shop Owner Product Management
+          </Text>
+
+          <FeatureCard
+            icon="＋"
+            title="Add Product"
+            subtitle="Coming in backend"
+            onPress={() =>
+              Alert.alert(
+                "Products",
+                "Product database can be connected next."
+              )
+            }
+          />
+        </ScrollView>
+      </SafeAreaView>
+    );
+  }
+
+  if (screen === "government") {
+    return (
+      <SafeAreaView style={styles.safe}>
+        <SpecialList
+          title="Government Help"
+          icon="🏛️"
+          data={GOVERNMENT}
+          onBack={goHome}
+        />
+      </SafeAreaView>
+    );
+  }
+
+  if (screen === "emergency") {
+    return (
+      <SafeAreaView style={styles.safe}>
+        <SpecialList
+          title="Emergency Help"
+          icon="🚨"
+          data={EMERGENCY}
+          onBack={goHome}
+        />
+      </SafeAreaView>
+    );
+  }
+
+  return (
+    <SafeAreaView style={styles.safe}>
+      {tab === "home" && (
+        <Home
+          setCategory={(c) => {
+            setCategory(c);
+            setTab("search");
+          }}
+          openEmergency={() =>
+            openScreen("emergency")
+          }
+          openGovernment={() =>
+            openScreen("government")
+          }
+          openAdmin={openAdmin}
+          openScreen={openScreen}
+          member={member}
+        />
+      )}
+
+      {tab === "search" && (
+        <Directory
+          data={data}
+          category={category}
+          setCategory={setCategory}
+          search={search}
+          setSearch={setSearch}
+          favourites={favourites}
+          toggleFavourite={
+            toggleFavourite
+          }
+          admin={admin}
+          openEdit={(item) =>
+            setEditing({ item })
+          }
+        />
+      )}
+
+      {tab === "emergency" && (
+        <SpecialList
+          title="Emergency Help"
+          icon="🚨"
+          data={EMERGENCY}
+          onBack={() => setTab("home")}
+        />
+      )}
+
+      {tab === "admin" && (
+        <AdminPanel
+          data={data}
+          onBack={() => setTab("home")}
+          onAdd={addListing}
+          onEdit={(item) =>
+            setEditing({ item })
+          }
+          onDelete={(index) =>
+            setData((prev) =>
+              prev.filter(
+                (_, i) => i !== index
+              )
+            )
+          }
+        />
+      )}
+
+      {/* BOTTOM NAV */}
+
+      <View style={styles.bottomNav}>
+        <NavButton
+          icon="🏠"
+          title="Home"
+          active={tab === "home"}
+          onPress={() => {
+            setTab("home");
+            setScreen(null);
+          }}
+        />
+
+        <NavButton
+          icon="🔎"
+          title="Search"
+          active={tab === "search"}
+          onPress={() => {
+            setTab("search");
+            setScreen(null);
+          }}
+        />
+
+        <NavButton
+          icon="🚨"
+          title="Emergency"
+          active={tab === "emergency"}
+          onPress={() => {
+            setTab("emergency");
+            setScreen(null);
+          }}
+        />
+
+        <NavButton
+          icon="⚙️"
+          title="Admin"
+          active={tab === "admin"}
+          onPress={openAdmin}
+        />
+      </View>
+    </SafeAreaView>
+  );
+}
+
+/* =========================================================
+   NAV BUTTON
+========================================================= */
+
+function NavButton({
+  icon,
+  title,
+  active,
+  onPress,
+}) {
+  return (
+    <TouchableOpacity
+      style={[
+        styles.navButton,
+        active && styles.navActive,
+      ]}
+      onPress={onPress}
+    >
+      <Text style={styles.navIcon}>
+        {icon}
+      </Text>
+
+      <Text
+        style={[
+          styles.navText,
+          active && styles.navTextActive,
+        ]}
+      >
+        {title}
+      </Text>
+    </TouchableOpacity>
+  );
+}
+
+/* =========================================================
+   STYLES
+========================================================= */
+
+const styles = StyleSheet.create({
+  safe: {
+    flex: 1,
+    backgroundColor: "#f6f8fc",
+  },
+
+  page: {
+    flex: 1,
+    backgroundColor: "#f6f8fc",
+  },
+
+  pageContent: {
+    padding: 16,
+    paddingBottom: 110,
+  },
+
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 14,
+  },
+
+  brand: {
+    fontSize: 22,
+    fontWeight: "900",
+    color: "#101828",
+    letterSpacing: 0.5,
+  },
+
+  brand83: {
+    fontSize: 14,
+    fontWeight: "900",
+    color: "#7c3aed",
+    marginTop: 2,
+  },
+
+  tagline: {
+    fontSize: 10,
+    fontWeight: "800",
+    color: "#64748b",
+    letterSpacing: 2,
+    marginTop: 2,
+  },
+
+  adminSmall: {
+    backgroundColor: "#101828",
+    borderRadius: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+    alignItems: "center",
+  },
+
+  adminSmallIcon: {
+    fontSize: 18,
+  },
+
+  adminSmallText: {
+    color: "#fff",
+    fontSize: 9,
+    fontWeight: "900",
+    marginTop: 2,
+  },
+
+  hero: {
+    backgroundColor: "#111827",
+    borderRadius: 28,
+    padding: 24,
+    marginBottom: 18,
+    overflow: "hidden",
+  },
+
+  heroSmall: {
+    color: "#a7f3d0",
+    fontSize: 13,
+    fontWeight: "900",
+    letterSpacing: 2,
+  },
+
+  heroTitle: {
+    color: "#fff",
+    fontSize: 29,
+    fontWeight: "900",
+    marginTop: 4,
+  },
+
+  heroTamil: {
+    color: "#cbd5e1",
+    fontSize: 13,
+    marginTop: 10,
+    lineHeight: 20,
+  },
+
+  freeBadge: {
+    alignSelf: "flex-start",
+    backgroundColor: "#064e3b",
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    marginTop: 16,
+  },
+
+  freeText: {
+    color: "#a7f3d0",
+    fontSize: 11,
+    fontWeight: "900",
+  },
+
+  sectionHeader: {
+    marginTop: 4,
+    marginBottom: 10,
+  },
+
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: "900",
+    color: "#111827",
+    marginBottom: 12,
+  },
+
+  twoColumns: {
+    flexDirection: "row",
+    gap: 12,
+    marginBottom: 18,
+  },
+
+  featureGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 12,
+    marginBottom: 18,
+  },
+
+  featureCard: {
+    backgroundColor: "#fff",
+    borderRadius: 22,
+    padding: 14,
+    width: "47%",
+    minHeight: 140,
+    borderWidth: 1,
+    borderColor: "#e8edf5",
+    shadowColor: "#0f172a",
+    shadowOpacity: 0.06,
+    shadowRadius: 12,
+    shadowOffset: {
+      width: 0,
+      height: 5,
+    },
+    elevation: 3,
+  },
+
+  iconCircle: {
+    backgroundColor: "#f1f5f9",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  featureTitle: {
+    fontSize: 15,
+    fontWeight: "900",
+    color: "#111827",
+    marginTop: 10,
+  },
+
+  featureSubtitle: {
+    fontSize: 11,
+    color: "#64748b",
+    marginTop: 3,
+  },
+
+  emergencyBox: {
+    backgroundColor: "#fff1f2",
+    borderWidth: 1,
+    borderColor: "#fecdd3",
+    borderRadius: 24,
+    padding: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 16,
+  },
+
+  emergencyTitle: {
+    color: "#be123c",
+    fontSize: 19,
+    fontWeight: "900",
+  },
+
+  emergencySub: {
+    color: "#475569",
+    fontSize: 12,
+    marginTop: 4,
+  },
+
+  emergencyTamil: {
+    color: "#be123c",
+    fontWeight: "700",
+    fontSize: 12,
+    marginTop: 4,
+  },
+
+  arrow: {
+    fontSize: 32,
+    color: "#64748b",
+  },
+
+  adminPanelPreview: {
+    backgroundColor: "#eef2ff",
+    borderRadius: 24,
+    padding: 18,
+    borderWidth: 1,
+    borderColor: "#c7d2fe",
+    marginBottom: 16,
+  },
+
+  adminPreviewTitle: {
+    fontSize: 18,
+    fontWeight: "900",
+    color: "#3730a3",
+  },
+
+  adminPreviewText: {
+    color: "#475569",
+    lineHeight: 20,
+    fontSize: 12,
+    marginTop: 8,
+  },
+
+  adminOpenButton: {
+    backgroundColor: "#4338ca",
+    padding: 13,
+    borderRadius: 14,
+    marginTop: 12,
+    alignItems: "center",
+  },
+
+  adminOpenText: {
+    color: "#fff",
+    fontWeight: "900",
+  },
+
+  membershipBanner: {
+    backgroundColor: "#fff",
+    borderRadius: 24,
+    padding: 17,
+    flexDirection: "row",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#ddd6fe",
+    marginBottom: 18,
+  },
+
+  membershipIcon: {
+    fontSize: 42,
+    marginRight: 14,
+  },
+
+  membershipTitle: {
+    color: "#6d28d9",
+    fontWeight: "900",
+    fontSize: 12,
+  },
+
+  membershipPrice: {
+    color: "#111827",
+    fontSize: 22,
+    fontWeight: "900",
+    marginTop: 2,
+  },
+
+  membershipSub: {
+    color: "#64748b",
+    fontSize: 11,
+    marginTop: 2,
+  },
+
+  categoryGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 10,
+  },
+
+  categoryBox: {
+    backgroundColor: "#fff",
+    width: "30.8%",
+    minHeight: 112,
+    borderRadius: 20,
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 9,
+    borderWidth: 1,
+    borderColor: "#e2e8f0",
+  },
+
+  categoryText: {
+    textAlign: "center",
+    color: "#334155",
+    fontWeight: "800",
+    fontSize: 10,
+    marginTop: 7,
+  },
+
+  footer: {
+    alignItems: "center",
+    paddingVertical: 25,
+  },
+
+  footerBrand: {
+    fontSize: 16,
+    fontWeight: "900",
+    color: "#111827",
+  },
+
+  footerText: {
+    fontSize: 10,
+    color: "#94a3b8",
+    marginTop: 4,
+  },
+
+  screenTitle: {
+    fontSize: 26,
+    fontWeight: "900",
+    color: "#111827",
+  },
+
+  screenSub: {
+    color: "#64748b",
+    fontSize: 12,
+    marginTop: 4,
+    marginBottom: 14,
+  },
+
+  searchInput: {
+    backgroundColor: "#fff",
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: "#e2e8f0",
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    fontSize: 15,
+    marginBottom: 12,
+    color: "#111827",
+  },
+
+  chip: {
+    backgroundColor: "#fff",
+    borderWidth: 1,
+    borderColor: "#e2e8f0",
+    borderRadius: 18,
+    paddingHorizontal: 11,
+    paddingVertical: 9,
+    marginRight: 7,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+
+  chipActive: {
+    backgroundColor: "#111827",
+    borderColor: "#111827",
+  },
+
+  chipIcon: {
+    fontSize: 14,
+    marginRight: 4,
+  },
+
+  chipText: {
+    color: "#475569",
+    fontSize: 11,
+    fontWeight: "800",
+  },
+
+  chipTextActive: {
+    color: "#fff",
+  },
+
+  card: {
+    backgroundColor: "#fff",
+    borderRadius: 22,
+    padding: 15,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: "#e8edf5",
+  },
+
+  cardTop: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+
+  nameRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+  },
+
+  cardTitle: {
+    flex: 1,
+    fontSize: 16,
+    fontWeight: "900",
+    color: "#111827",
+  },
+
+  heart: {
+    fontSize: 24,
+    marginLeft: 8,
+  },
+
+  verified: {
+    color: "#059669",
+    fontSize: 9,
+    fontWeight: "900",
+    marginTop: 3,
+  },
+
+  cardLocation: {
+    color: "#64748b",
+    fontSize: 11,
+    marginTop: 5,
+    lineHeight: 17,
+  },
+
+  description: {
+    color: "#475569",
+    fontSize: 12,
+    marginTop: 12,
+    lineHeight: 18,
+  },
+
+  meta: {
+    color: "#64748b",
+    fontSize: 11,
+    marginTop: 6,
+  },
+
+  offer: {
+    backgroundColor: "#fef3c7",
+    borderRadius: 12,
+    padding: 9,
+    marginTop: 10,
+  },
+
+  offerText: {
+    color: "#92400e",
+    fontWeight: "800",
+    fontSize: 11,
+  },
+
+  actions: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 7,
+    marginTop: 12,
+  },
+
+  actionButton: {
+    backgroundColor: "#f1f5f9",
+    borderRadius: 13,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+
+  actionGreen: {
+    backgroundColor: "#ecfdf5",
+  },
+
+  actionDanger: {
+    backgroundColor: "#fff1f2",
+  },
+
+  actionIcon: {
+    fontSize: 14,
+    marginRight: 4,
+  },
+
+  actionText: {
+    fontSize: 10,
+    fontWeight: "900",
+    color: "#334155",
+  },
+
+  bottomNav: {
+    position: "absolute",
+    left: 10,
+    right: 10,
+    bottom: 10,
+    height: 70,
+    backgroundColor: "#111827",
+    borderRadius: 23,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-around",
+    paddingHorizontal: 5,
+  },
+
+  navButton: {
+    alignItems: "center",
+    justifyContent: "center",
+    width: "24%",
+    height: 58,
+    borderRadius: 18,
+  },
+
+  navActive: {
+    backgroundColor: "#334155",
+  },
+
+  navIcon: {
+    fontSize: 20,
+  },
+
+  navText: {
+    color: "#94a3b8",
+    fontSize: 9,
+    fontWeight: "800",
+    marginTop: 2,
+  },
+
+  navTextActive: {
+    color: "#fff",
+  },
+
+  backButton: {
+    marginBottom: 16,
+  },
+
+  back: {
+    color: "#475569",
+    fontSize: 16,
+    fontWeight: "800",
+  },
+
+  authPage: {
+    flexGrow: 1,
+    padding: 20,
+    justifyContent: "center",
+    alignItems: "stretch",
+  },
+
+  authTitle: {
+    textAlign: "center",
+    fontSize: 25,
+    fontWeight: "900",
+    color: "#111827",
+    marginTop: 15,
+  },
+
+  authSub: {
+    textAlign: "center",
+    color: "#64748b",
+    marginTop: 4,
+    marginBottom: 25,
+  },
+
+  label: {
+    color: "#334155",
+    fontSize: 11,
+    fontWeight: "900",
+    marginBottom: 6,
+  },
+
+  input: {
+    backgroundColor: "#fff",
+    borderWidth: 1,
+    borderColor: "#dbe3ee",
+    borderRadius: 15,
+    paddingHorizontal: 14,
+    paddingVertical: 13,
+    color: "#111827",
+    fontSize: 14,
+  },
+
+  textArea: {
+    minHeight: 110,
+    textAlignVertical: "top",
+  },
+
+  primaryButton: {
+    backgroundColor: "#111827",
+    borderRadius: 16,
+    padding: 15,
+    alignItems: "center",
+    marginTop: 4,
+  },
+
+  primaryButtonText: {
+    color: "#fff",
+    fontWeight: "900",
+    fontSize: 13,
+  },
+
+  switchButton: {
+    padding: 15,
+    alignItems: "center",
+  },
+
+  switchText: {
+    color: "#4f46e5",
+    fontWeight: "800",
+  },
+
+  ownerHero: {
+    backgroundColor: "#111827",
+    borderRadius: 28,
+    padding: 25,
+    alignItems: "center",
+    marginBottom: 18,
+  },
+
+  ownerTitle: {
+    color: "#fff",
+    fontSize: 20,
+    fontWeight: "900",
+    marginTop: 12,
+  },
+
+  ownerSub: {
+    color: "#cbd5e1",
+    marginTop: 4,
+  },
+
+  ownerStatus: {
+    backgroundColor: "#f5f3ff",
+    borderRadius: 22,
+    padding: 18,
+    borderWidth: 1,
+    borderColor: "#ddd6fe",
+    marginBottom: 18,
+  },
+
+  statusTitle: {
+    color: "#6d28d9",
+    fontWeight: "900",
+  },
+
+  statusValue: {
+    color: "#111827",
+    fontSize: 24,
+    fontWeight: "900",
+    marginTop: 5,
+  },
+
+  statusText: {
+    color: "#64748b",
+    fontSize: 11,
+    marginTop: 2,
+  },
+
+  smallButton: {
+    alignSelf: "flex-start",
+    backgroundColor: "#7c3aed",
+    paddingHorizontal: 13,
+    paddingVertical: 10,
+    borderRadius: 12,
+    marginTop: 10,
+  },
+
+  smallButtonText: {
+    color: "#fff",
+    fontWeight: "900",
+    fontSize: 11,
+  },
+
+  ownerGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 12,
+    marginBottom: 18,
+  },
+
+  settingsBox: {
+    backgroundColor: "#fff",
+    borderRadius: 22,
+    padding: 18,
+    borderWidth: 1,
+    borderColor: "#e2e8f0",
+  },
+
+  settingsTitle: {
+    fontSize: 17,
+    fontWeight: "900",
+    marginBottom: 12,
+  },
+
+  settingRow: {
+    color: "#475569",
+    paddingVertical: 7,
+    fontSize: 12,
+    fontWeight: "700",
+  },
+
+  contentHero: {
+    alignItems: "center",
+    paddingVertical: 18,
+    marginBottom: 8,
+  },
+
+  createButton: {
+    backgroundColor: "#4f46e5",
+    borderRadius: 17,
+    padding: 15,
+    alignItems: "center",
+    marginBottom: 15,
+  },
+
+  createButtonText: {
+    color: "#fff",
+    fontWeight: "900",
+  },
+
+  postCard: {
+    backgroundColor: "#fff",
+    borderRadius: 22,
+    padding: 17,
+    borderWidth: 1,
+    borderColor: "#e2e8f0",
+    marginBottom: 12,
+  },
+
+  postType: {
+    color: "#7c3aed",
+    fontSize: 10,
+    fontWeight: "900",
+  },
+
+  postTitle: {
+    color: "#111827",
+    fontSize: 18,
+    fontWeight: "900",
+    marginTop: 7,
+  },
+
+  postBody: {
+    color: "#475569",
+    lineHeight: 19,
+    marginTop: 7,
+    fontSize: 12,
+  },
+
+  imagePreview: {
+    backgroundColor: "#f1f5f9",
+    borderRadius: 16,
+    minHeight: 130,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 12,
+    padding: 15,
+  },
+
+  imagePreviewText: {
+    fontSize: 26,
+  },
+
+  imageUrl: {
+    color: "#64748b",
+    fontSize: 9,
+    marginTop: 5,
+    textAlign: "center",
+  },
+
+  postLocation: {
+    color: "#64748b",
+    fontSize: 11,
+    marginTop: 10,
+  },
+
+  empty: {
+    alignItems: "center",
+    padding: 40,
+  },
+
+  emptyIcon: {
+    fontSize: 40,
+  },
+
+  emptyTitle: {
+    fontSize: 18,
+    fontWeight: "900",
+    marginTop: 10,
+  },
+
+  emptyText: {
+    color: "#64748b",
+    marginTop: 4,
+  },
+
+  typeRow: {
+    flexDirection: "row",
+    gap: 8,
+    marginBottom: 18,
+  },
+
+  typeButton: {
+    flex: 1,
+    backgroundColor: "#fff",
+    borderWidth: 1,
+    borderColor: "#e2e8f0",
+    borderRadius: 14,
+    padding: 12,
+    alignItems: "center",
+  },
+
+  typeButtonActive: {
+    backgroundColor: "#111827",
+    borderColor: "#111827",
+  },
+
+  typeButtonText: {
+    color: "#475569",
+    fontSize: 11,
+    fontWeight: "800",
+  },
+
+  typeButtonTextActive: {
+    color: "#fff",
+  },
+
+  prototypeNote: {
+    color: "#94a3b8",
+    fontSize: 10,
+    lineHeight: 16,
+    textAlign: "center",
+    marginTop: 14,
+  },
+
+  membershipPage: {
+    alignItems: "center",
+    backgroundColor: "#fff",
+    borderRadius: 28,
+    padding: 24,
+    borderWidth: 1,
+    borderColor: "#ddd6fe",
+  },
+
+  membershipBig: {
+    fontSize: 23,
+    fontWeight: "900",
+    color: "#111827",
+  },
+
+  priceBig: {
+    fontSize: 52,
+    fontWeight: "900",
+    color: "#7c3aed",
+    marginTop: 10,
+  },
+
+  monthText: {
+    color: "#64748b",
+    fontWeight: "900",
+    letterSpacing: 2,
+    marginBottom: 18,
+  },
+
+  benefit: {
+    width: "100%",
+    borderBottomWidth: 1,
+    borderBottomColor: "#f1f5f9",
+    paddingVertical: 10,
+  },
+
+  benefitText: {
+    color: "#334155",
+    fontWeight: "700",
+  },
+
+  upiButton: {
+    width: "100%",
+    backgroundColor: "#16a34a",
+    borderRadius: 17,
+    padding: 16,
+    alignItems: "center",
+    marginTop: 20,
+  },
+
+  upiText: {
+    color: "#fff",
+    fontWeight: "900",
+  },
+
+  adminHero: {
+    backgroundColor: "#111827",
+    borderRadius: 28,
+    padding: 24,
+    alignItems: "center",
+    marginBottom: 18,
+  },
+
+  adminHeroTitle: {
+    color: "#fff",
+    fontSize: 23,
+    fontWeight: "900",
+    marginTop: 10,
+  },
+
+  adminHeroSub: {
+    color: "#a7f3d0",
+    fontSize: 11,
+    fontWeight: "900",
+    letterSpacing: 1.5,
+    marginTop: 5,
+  },
+
+  adminPowerGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 9,
+    marginBottom: 18,
+  },
+
+  powerCard: {
+    backgroundColor: "#fff",
+    width: "31.8%",
+    borderRadius: 17,
+    padding: 13,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#e2e8f0",
+  },
+
+  powerIcon: {
+    fontSize: 25,
+  },
+
+  powerText: {
+    fontSize: 9,
+    color: "#334155",
+    fontWeight: "800",
+    textAlign: "center",
+    marginTop: 5,
+  },
+
+  adminForm: {
+    backgroundColor: "#fff",
+    borderRadius: 22,
+    padding: 17,
+    borderWidth: 1,
+    borderColor: "#e2e8f0",
+    marginBottom: 18,
+  },
+
+  adminFormTitle: {
+    fontSize: 18,
+    fontWeight: "900",
+    marginBottom: 15,
+  },
+
+  adminListing: {
+    backgroundColor: "#fff",
+    borderRadius: 17,
+    padding: 12,
+    marginBottom: 8,
+    flexDirection: "row",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#e2e8f0",
+  },
+
+  adminListingName: {
+    fontWeight: "900",
+    color: "#111827",
+  },
+
+  adminListingInfo: {
+    color: "#64748b",
+    fontSize: 10,
+    marginTop: 4,
+  },
+
+  editMini: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    backgroundColor: "#eef2ff",
+    alignItems: "center",
+    justifyContent: "center",
+    marginLeft: 6,
+  },
+
+  deleteMini: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    backgroundColor: "#fff1f2",
+    alignItems: "center",
+    justifyContent: "center",
+    marginLeft: 6,
+  },
+
+  profileHero: {
+    backgroundColor: "#fff",
+    borderRadius: 25,
+    padding: 25,
+    alignItems: "center",
+    marginBottom: 18,
+  },
+
+  profileName: {
+    fontSize: 24,
+    fontWeight: "900",
+    marginTop: 10,
+  },
+
+  profileInfo: {
+    color: "#64748b",
+    marginTop: 5,
+  },
+
+  dangerButton: {
+    backgroundColor: "#fff1f2",
+    borderWidth: 1,
+    borderColor: "#fecdd3",
+    borderRadius: 15,
+    padding: 15,
+    alignItems: "center",
+    marginTop: 15,
+  },
+
+  dangerText: {
+    color: "#be123c",
+    fontWeight: "900",
+  },
+
+  specialHeader: {
+    alignItems: "center",
+    paddingVertical: 10,
+    marginBottom: 15,
+  },
+});
