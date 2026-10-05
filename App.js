@@ -1,0 +1,2555 @@
+import React, { useMemo, useState } from "react";
+import {
+  SafeAreaView,
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  ScrollView,
+  StyleSheet,
+  Linking,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+} from "react-native";
+
+/* =========================================================
+   VANIYAMBADI 360
+   LOCAL, ALL AROUND
+   PUBLIC = FREE
+   ADMIN PIN = 360ADMIN
+   NO expo-image-picker
+========================================================= */
+
+const ADMIN_PIN = "360ADMIN";
+
+const CATEGORIES = [
+  { id: "all", icon: "🔎", name: "All" },
+  { id: "locations", icon: "📍", name: "Locations / ஊர்கள்" },
+  { id: "hospital", icon: "🏥", name: "Hospitals" },
+  { id: "clinic", icon: "🩺", name: "Clinics" },
+  { id: "school", icon: "🏫", name: "Schools" },
+  { id: "college", icon: "🎓", name: "Colleges" },
+  { id: "hotel", icon: "🍴", name: "Hotels" },
+  { id: "lodge", icon: "🏨", name: "Lodges" },
+  { id: "agency", icon: "🏢", name: "Agencies" },
+  { id: "delivery", icon: "🛵", name: "Delivery / Courier" },
+  { id: "supermarket", icon: "🛒", name: "Super Markets" },
+  { id: "shop", icon: "🏪", name: "Shops" },
+  { id: "petrol", icon: "⛽", name: "Petrol Bunks" },
+  { id: "bank", icon: "🏦", name: "Banks" },
+  { id: "atm", icon: "🏧", name: "ATMs" },
+  { id: "salon", icon: "💇", name: "Salon" },
+  { id: "temple", icon: "🛕", name: "Temples" },
+  { id: "railway", icon: "🚉", name: "Railway" },
+  { id: "highway", icon: "🛣️", name: "Highway" },
+  { id: "gold", icon: "🥇", name: "Gold Rate" },
+  { id: "reels", icon: "🎬", name: "Reels" },
+  { id: "offers", icon: "🎁", name: "Offers" },
+  { id: "government", icon: "🏛️", name: "Government" },
+  { id: "emergency", icon: "🚨", name: "Emergency" },
+];
+
+/* =========================================================
+   LOCATIONS
+========================================================= */
+
+const LOCATIONS = [
+  ["Vaniyambadi", "வாணியம்பாடி"],
+  ["Mettupalayam", "மேட்டுப்பாளையம்"],
+  ["Pallipattu", "பள்ளிப்பட்டு"],
+  ["Udayendiram", "உதயந்திரம்"],
+  ["Jabrapath", "ஜாப்ராபாத்"],
+  ["Madanancheri", "மதனாஞ்சேரி"],
+  ["Thumberi", "தும்பேரி"],
+  ["Thimmampettai", "திம்மாம்பேட்டை"],
+  ["Khaderpet", "காதர்பேட்டை"],
+  ["Neelfield", "நீல்ஃபீல்டு"],
+  ["Muslimpur", "முஸ்லிம்பூர்"],
+  ["Basheerabad", "பஷீராபாத்"],
+  ["Shakirabad", "ஷாகிராபாத்"],
+  ["New Town", "நியூ டவுன்"],
+  ["Perumalpet", "பெருமாள்பேட்டை"],
+  ["Pudur", "புதூர்"],
+  ["Konamedu", "கோணமேடு"],
+  ["Periyapet", "பெரியபேட்டை"],
+  ["Jandamedu", "ஜண்டாமேடு"],
+  ["Valayambattu", "வளையாம்பட்டு"],
+  ["Chennampet", "சென்னாம்பேட்டை"],
+].map(([name, tamil]) => ({
+  name,
+  tamil,
+  category: "locations",
+  location: `${tamil}, Vaniyambadi`,
+  description: `${name} — ${tamil}`,
+}));
+
+/* =========================================================
+   SCHOOLS - OFFICIAL MUNICIPALITY LIST
+========================================================= */
+
+const SCHOOL_NAMES = [
+  ["T.V.K.V. School", "Nethaji Nagar"],
+  ["Municipal Muslim Girls Middle School", "Fort"],
+  ["Municipal Higher Secondary School", "Gandhi Nagar"],
+  ["Madhara-Se-Ajam", "Fort"],
+  ["Municipal Hindu Primary School", "Pudur"],
+  ["T.V.K.V. Elementary School", "Fort"],
+  ["Madhare-Se-Mubithe-Am", "Neelifield"],
+  ["Madhare-Se-Mubithe-Niswan", "Neelified"],
+  ["Hindu Aided School", "Amburpet"],
+  ["Nasirel Islam School", "Muslimpur"],
+  ["Municipal Muslim Boys School", "Gandhi Nagar"],
+  ["Municipal Hindu Primary School", "Perumalpet"],
+  ["Khaderia High School", "Khaderpet"],
+  ["Municipal Hindu Primary School", "Gandhi Nagar"],
+  ["Municipal Muslim Girls Primary School", "Khaderpet"],
+  ["Municipal Hindu Primary School", "Periyapet"],
+  ["Municipal Muslim Girls Primary School", "Muslimpur"],
+  ["Municipal Muslim Girls School", "Periyapet"],
+  ["T.V.K.V. High School", "Fort"],
+  ["I.E.L.C. Aided Primary School", "Pudur"],
+  ["Khaderia Aided Primary School", "Khaderpet"],
+  ["Hindu Middle School", "Konamedu"],
+  ["Concordia Higher Secondary School", "Pudur"],
+  ["Islamiah Higher Secondary School", "Fort"],
+  ["Islamiah Girls Higher Secondary School", "Noorullahpet"],
+  ["Madhare-Se Niswan", "Muslimpur"],
+];
+
+const SCHOOLS = SCHOOL_NAMES.map(([name, location]) => ({
+  name,
+  category: "school",
+  location: `${location}, Vaniyambadi`,
+  verified: true,
+}));
+
+/* =========================================================
+   COLLEGES / ITI
+========================================================= */
+
+const COLLEGES = [
+  {
+    name: "Islamiah College",
+    category: "college",
+    location: "New Town, Vaniyambadi",
+    verified: true,
+  },
+  {
+    name: "Islamiah Women's College",
+    category: "college",
+    location: "Perumalpet, Vaniyambadi",
+    verified: true,
+  },
+  {
+    name: "Priyadarshini College",
+    category: "college",
+    location: "Vaniyambadi",
+    verified: true,
+  },
+  {
+    name: "Islamiah I.T.I.",
+    category: "college",
+    location: "New Town, Vaniyambadi",
+    verified: true,
+  },
+  {
+    name: "Priyadarshini Engineering College",
+    category: "college",
+    location: "Tirupattur Road side",
+  },
+  {
+    name: "Priyadarshini Polytechnic College",
+    category: "college",
+    location: "Vaniyambadi area",
+  },
+  {
+    name: "Vaani College of Education",
+    category: "college",
+    location: "Vaniyambadi",
+  },
+  {
+    name: "Government ITI",
+    category: "college",
+    location: "Vaniyambadi",
+  },
+  {
+    name: "Ar Rahman College of Allied Health",
+    category: "college",
+    location: "Pallan Khaleelur Rahman Street, Vaniyambadi",
+  },
+  {
+    name: "Annai Nursing College & Allied Health Science",
+    category: "college",
+    location: "CN Annadurai Road, Vaniyambadi",
+  },
+];
+
+/* =========================================================
+   HOSPITALS - OFFICIAL MUNICIPALITY DATA
+========================================================= */
+
+const HOSPITALS = [
+  ["Government Hospital", "Jamath Road, Vaniyambadi", "225700"],
+  ["Kafeel Emergency Care Unit (Azeem Hospital)", "PJN Road, Vaniyambadi", "9944238110"],
+  ["Ikram Hospital", "147, Mandi Dadamiyan Street, Neelfield, Vaniyambadi", "944338668"],
+  ["Fyyaz Kamal Hospital", "24/2/1, PJN Road, Vaniyambadi", "9345970089"],
+  ["Dr. Vasantha Hospital", "4/1, PJN Road, Vaniyambadi", "9952778962"],
+  ["Riya Maternity Hospital", "265, PJN Road, Vaniyambadi", ""],
+  ["AR Rahman Hospital", "Hameenabad, Khaderpet, Vaniyambadi", ""],
+  ["Dr. Parvathi Hospital", "Malang Road, Khaderpet, Vaniyambadi", ""],
+  ["David Hospital", "Opp. Khaderpet Masjid, Railway Station Road, Vaniyambadi", ""],
+  ["Vijaya Ortho Care and Hospital", "283/20, Jamath Road, Noorullahpet, Vaniyambadi", "9003622638"],
+  ["Sadha Hospital", "Bypass Road, New Town, Vaniyambadi", "9994214888"],
+  ["Dr. Akbar Kouser", "New Town, Vaniyambadi", ""],
+  ["Karunai Illam", "124/K, Alangayam Cross Road, Perumalpet, Vaniyambadi", ""],
+  ["Sugam Multi-Speciality Hospital", "CN Annadurai Road, Near Railway Gate", "8111055539"],
+  ["Ayesha Hospital", "2/25, Kaniyambadi Street, Neelfield", "9894474730"],
+  ["ARSH Maternity & Surgical Care", "Mandi Street, Neelfield", "6383612329"],
+  ["A R Speciality Hospital", "CL Road, Neelfield", "8940327070"],
+  ["Care & Cure Centre", "Cutchery Road, Neelfield", "4174320206"],
+  ["Kaleef Dialysis Hospital", "Shakirabad, Vaniyambadi", ""],
+  ["Azeem Multispeciality Dental Care Center", "Shakirabad, Vaniyambadi", ""],
+  ["Arivu Dental Care", "Mandi Dhadhemiyan Street, Neelfield", ""],
+  ["Best Laser Dental Clinic", "CL Road, Khaderpet", ""],
+  ["Al-Ameen Unani Multispeciality Clinic & Hijama", "PJN Road", "8667436515"],
+  ["Al Sadiq Multispeciality Clinic & Hijamah Centre", "Salamabad Main Road, Basheerabad", "8610033503"],
+  ["Apollo 24|7 Lab Test Vaniyambadi", "CL Road, Khaderpet", "8045572851"],
+].map(([name, location, phone]) => ({
+  name,
+  category: "hospital",
+  location,
+  phone,
+  verified: true,
+}));
+
+/* =========================================================
+   PRIVATE CLINICS - OFFICIAL MUNICIPALITY DATA
+========================================================= */
+
+const CLINICS = [
+  ["Dr. Siva Subramaniyam M.B.B.S", "Bypass Road, Thendral Nagar, Perumalpet", "8870331718"],
+  ["Dr. Tamil Selvi M.B.B.S", "81, New Street, New Town", "9443019307"],
+  ["Dr. Moda Amjad Basha M.B.B.S", "1304, Meddaikar Street, Neelfield", "9500912531"],
+  ["D. Ejaz Ahmed M.B.B.S", "19, PJN Road", "9791338545"],
+  ["Dr. Arivumani M.B.B.S", "Mariyamman Koil Street, Pudur", ""],
+  ["Ayesha Hospital Clinic", "2/25, Kaniyambadi Street, Neelfield", "9894474730"],
+  ["Dr. Syed Farouk Ahmed M.B.B.S / B.A. Shukoor Hospital", "1240, PJN Road", "9980511640"],
+].map(([name, location, phone]) => ({
+  name,
+  category: "clinic",
+  location: `${location}, Vaniyambadi`,
+  phone,
+  verified: true,
+}));
+
+/* =========================================================
+   HOTELS / RESTAURANTS
+========================================================= */
+
+const HOTELS = [
+  ["Vasantha Vihar", "15, C.N.A. Road, Vaniyambadi", "Vegetarian Restaurant"],
+  ["Saravana Bhavan", "8, C.N.A. Road, Vaniyambadi", "Vegetarian Restaurant"],
+  ["Khaja Hotel", "157, C.N.A. Road, Vaniyambadi", "Non-Vegetarian Restaurant"],
+  ["Madras Hotel", "23, C.N.A. Road, Vaniyambadi", "Non-Vegetarian Restaurant"],
+  ["Rahamathiya Hotel", "C.N.A. Road, Vaniyambadi", "Non-Vegetarian Restaurant"],
+  ["Ahamathiya Hotel", "C.N.A. Road, Vaniyambadi", "Non-Vegetarian Restaurant"],
+].map(([name, location, description]) => ({
+  name,
+  category: "hotel",
+  location,
+  description,
+  verified: true,
+}));
+
+/* =========================================================
+   LODGES
+========================================================= */
+
+const LODGES = [
+  ["Municipal Lodge", "C.N.A. Road, Bus Stand"],
+  ["Kanna Lodge", "C.N.A. Road"],
+  ["Sumangali Lodge", "C.N.A. Road"],
+  ["M.R. Manson", "C.N.A. Road"],
+  ["Babu Lodge", "C.N.A. Road"],
+  ["Vetri Lodge", "C.L. Road"],
+  ["Naveen Lodge", "Madurai Street"],
+  ["Padmavathi Annamalai", "P.J.N. Road"],
+].map(([name, location]) => ({
+  name,
+  category: "lodge",
+  location: `${location}, Vaniyambadi`,
+  description: "Lodging",
+  verified: true,
+}));
+
+/* =========================================================
+   AGENCIES
+========================================================= */
+
+const AGENCIES = [
+  {
+    name: "J.K. Agencies",
+    category: "agency",
+    location: "C.L. Road, Vaniyambadi",
+    verified: true,
+  },
+  {
+    name: "Rainbow",
+    category: "agency",
+    location: "C.L. Road, Vaniyambadi",
+    verified: true,
+  },
+  {
+    name: "Sathya Agencies",
+    category: "agency",
+    location: "157/A2, CAN Road, Near Bus Stand, Vaniyambadi",
+    phone: "+917305958985",
+    rating: 4.9,
+    reviews: 1172,
+  },
+  {
+    name: "Amul Distributor",
+    category: "agency",
+    location: "Vaniyambadi",
+    description: "Admin can add exact distributor details.",
+  },
+];
+
+/* =========================================================
+   DELIVERY / COURIER
+========================================================= */
+
+const DELIVERY = [
+  {
+    name: "DHT Global Express International Courier",
+    category: "delivery",
+    location: "CN Annadurai Road, Nadar Colony, Teachers Colony",
+    phone: "+919042577651",
+    hours: "10:00 - 23:00",
+    rating: 4.8,
+    reviews: 132,
+  },
+  {
+    name: "ST Courier - Vaniyambadi",
+    category: "delivery",
+    location: "665, Munisamy Pillai Street, Khaderpet",
+    phone: "+919994859147",
+    rating: 3.2,
+    reviews: 131,
+  },
+  {
+    name: "Blue Dart Express Limited",
+    category: "delivery",
+    location: "Shop No.4 Matha Lodge, 1062/A, CN Annadurai Road, Near Fire Station",
+    phone: "+912269751234",
+    rating: 2.9,
+    reviews: 53,
+  },
+  {
+    name: "VRL Logistics Ltd - Vaniyambadi",
+    category: "delivery",
+    location: "Bypass Street, Near Mugal Garden, Miyan Nagar",
+    phone: "+9118005997800",
+    rating: 2.7,
+    reviews: 3,
+  },
+  {
+    name: "A1 Travels & Speed Parcel Service",
+    category: "delivery",
+    location: "46, Jinnah Road, Vaniyambadi",
+    phone: "+919514604998",
+  },
+  {
+    name: "AKR Express Parcel Service",
+    category: "delivery",
+    location: "No.1057/D5, Matha Lodge, Trunk Road, Konamedu",
+    phone: "+919443123217",
+    rating: 4.3,
+    reviews: 117,
+  },
+  {
+    name: "Liberty Express",
+    category: "delivery",
+    location: "84 CN Annadurai Road, Khaderpet, Teachers Colony",
+    phone: "+919944729904",
+    rating: 4.2,
+    reviews: 5,
+  },
+  {
+    name: "Trackon Couriers",
+    category: "delivery",
+    location: "451 Jinnah Road, Khaderpet",
+    phone: "+914162256242",
+    rating: 3.0,
+    reviews: 13,
+  },
+];
+
+/* =========================================================
+   PETROL
+========================================================= */
+
+const PETROL = [
+  {
+    name: "Hindustan Petroleum Corporation Limited",
+    category: "petrol",
+    location: "Islamia College Road Part A, Vaniyambadi",
+    phone: "+919751190190",
+    hours: "24 Hours",
+  },
+  {
+    name: "Hindustan Petroleum",
+    category: "petrol",
+    location: "Ground Floor, Bangalore Road, Vaniyambadi",
+    phone: "+917601936945",
+    hours: "24 Hours",
+  },
+  {
+    name: "Bharat Petroleum Petrol Pump",
+    category: "petrol",
+    location: "49 Shivan Street, Nadar Colony, Muslimpur",
+    phone: "+911800224344",
+  },
+  {
+    name: "Bharat Petroleum - N.S. Rajan",
+    category: "petrol",
+    location: "Adjacent Bus Stand, Vaniyambadi",
+    phone: "+911800224344",
+  },
+  {
+    name: "ADS Fuel Station",
+    category: "petrol",
+    location: "Alangayam to Vaniyambadi Road, Nethaji Nagar",
+  },
+  {
+    name: "IndianOil",
+    category: "petrol",
+    location: "Chettiyappanur, NH46, Govindapuram",
+    phone: "+919443161812",
+  },
+  {
+    name: "IndianOil",
+    category: "petrol",
+    location: "Khaderpet, Adhoc 152 Trunk Road",
+    phone: "+918778992329",
+  },
+  {
+    name: "IndianOil",
+    category: "petrol",
+    location: "Satipur NH46, Chettiyappanur",
+    phone: "+919952782133",
+  },
+];
+
+/* =========================================================
+   SHOPS / SUPERMARKETS
+========================================================= */
+
+const SHOPS = [
+  ["City Supermarket", "319 Malang Road, Muslimpur / Basheerabad", "9360716622"],
+  ["OAS Supermart", "475 Jinnah Road, Khaderpet", "7200455455"],
+  ["Seema Super Market", "61 Iqbal Road, Basheerabad", "9994489658"],
+  ["Sri Saravana Super Market", "Chettiyappanur / Kalendira", "9443686003"],
+  ["A2Z Mart Super Market", "Kaki Street / CL Road, Khaderpet", "7010016386"],
+  ["G M C Stores", "Mandi Street, Neelfield", "9994267502"],
+  ["Sanjay Stores", "CN Annadurai Road, Khaderpet", "9787460896"],
+  ["M G General Store", "1255 PJ Nehru Street, Cutchery Main Road", "7010807095"],
+  ["Al Madina General Store", "Vaniyambadi", "9994033982"],
+  ["S M Salahuddin Store", "Md Ali Bazaar Road, Shakirabad", "9042241977"],
+  ["Sama Store", "Periyar Nagar, Muslimpur", "9366111536"],
+  ["Makka Store", "High Road, Jabrapath", ""],
+  ["Mani Departments", "Bus Stand", ""],
+  ["Tindivanam Silks", "C.L. Road", ""],
+  ["Seematti Silks", "C.L. Road", ""],
+].map(([name, location, phone]) => ({
+  name,
+  category: name.toLowerCase().includes("market")
+    ? "supermarket"
+    : "shop",
+  location,
+  phone,
+}));
+
+/* =========================================================
+   SALONS
+========================================================= */
+
+const SALONS = [
+  ["Naturals Salon", "30 CN Annadurai Road, Teachers Colony", "6383103066"],
+  ["Mahi Maa Beauty Parlour", "55 Kamarajar Street, Pudur", "9150396088"],
+  ["Darpan Beauty Clinic & Parlour", "Thippanarao Street, Amburpet", "9442059119"],
+  ["Pooja Beauty Parlour & Training Academy", "Municipality Complex, Jinnah Road", "8754892009"],
+  ["Studio 27 Unisex Salon", "Vaniyambadi", ""],
+  ["Shine Gents Hair Salon", "Vaniyambadi", ""],
+  ["Nowmi Men Salon", "Vaniyambadi", ""],
+  ["M M Beauty Parlour", "Vaniyambadi", ""],
+  ["Royal Mens Beauty Saloon", "Vaniyambadi", ""],
+].map(([name, location, phone]) => ({
+  name,
+  category: "salon",
+  location,
+  phone,
+}));
+
+/* =========================================================
+   TEMPLES
+========================================================= */
+
+const TEMPLES = [
+  ["Sri Athitheeswara Swamy Temple", "Old Vaniyambadi", "9994107395"],
+  ["Sri Azhagu Perumal Temple", "Haji Street, D. Periyapettai", "9743955052"],
+  ["Puthu Mariyamman Kovil", "New Town", ""],
+  ["Sri Ettiyamman Temple", "W Mada Street, Old Vaniyambadi", ""],
+  ["Sri Vettuvanam Ellaiyamman Temple", "Old Vaniyambadi", ""],
+  ["Balamurugan Temple", "Vasantham Nagar / Valayambattu", ""],
+  ["Sri Panduranga Rukmayi Temple", "Chennampet", ""],
+  ["Vetkaliyamman Temple", "Konamedu", ""],
+  ["Om Sakthi Temple", "C.L. Road", ""],
+  ["Ponni Amman Koil", "Bazaar", ""],
+  ["Lord Venkateswaran Temple", "Periyapet", ""],
+].map(([name, location, phone]) => ({
+  name,
+  category: "temple",
+  location,
+  phone,
+}));
+
+/* =========================================================
+   BANKS / ATM
+========================================================= */
+
+const BANKS = [
+  "State Bank of India",
+  "HDFC Bank",
+  "ICICI Bank",
+  "Canara Bank",
+  "Indian Overseas Bank",
+  "Karur Vysya Bank",
+  "Axis Bank",
+].map((name) => ({
+  name,
+  category: "bank",
+  location: "Vaniyambadi",
+}));
+
+const ATMS = [
+  "SBI ATM",
+  "ICICI Bank ATM",
+  "HDFC Bank ATM",
+  "Axis Bank ATM",
+  "City Union Bank ATM",
+].map((name) => ({
+  name,
+  category: "atm",
+  location: "Vaniyambadi",
+}));
+
+/* =========================================================
+   RAILWAY / HIGHWAY / GOLD / OFFERS
+========================================================= */
+
+const EXTRA = [
+  {
+    name: "Vaniyambadi Railway Station",
+    category: "railway",
+    location: "Vaniyambadi",
+    phone: "232308",
+  },
+  {
+    name: "Vaniyambadi - Bengaluru Highway",
+    category: "highway",
+    location: "NH48 / Bengaluru Road side",
+  },
+  {
+    name: "Vaniyambadi - Chennai Highway",
+    category: "highway",
+    location: "NH48 / Chennai direction",
+  },
+  {
+    name: "Today's Gold Rate",
+    category: "gold",
+    location: "Vaniyambadi",
+    description: "Live trusted gold-rate API to be connected.",
+    offer: "LIVE API PENDING",
+  },
+  {
+    name: "Vaniyambadi 360 Offers",
+    category: "offers",
+    location: "Vaniyambadi",
+    description: "Admin can add local offers.",
+  },
+  {
+    name: "Vaniyambadi 360 Reels",
+    category: "reels",
+    location: "Vaniyambadi",
+    description: "Admin can add video links.",
+  },
+];
+
+/* =========================================================
+   GOVERNMENT
+========================================================= */
+
+const GOVERNMENT = [
+  ["Aadhaar / UIDAI", "India", "1947", "https://www.uidai.gov.in/"],
+  ["Tamil Nadu e-Sevai", "Tamil Nadu", "18004256000", "https://www.tnesevai.tn.gov.in/"],
+  ["Vaniyambadi Municipality", "Islamiah College Road, Vaniyambadi", "04174235317", "https://www.tnurbantree.tn.gov.in/vaniyambadi/"],
+  ["Vaniyambadi Taluk Office", "Vaniyambadi", "232184", "https://tirupathur.nic.in/"],
+  ["Police Station", "Vaniyambadi", "232110", ""],
+  ["Fire Station", "Vaniyambadi", "224101", ""],
+  ["Railway Station", "Vaniyambadi", "232308", ""],
+  ["Government Hospital", "Vaniyambadi", "225700", ""],
+  ["Electricity Board", "Vaniyambadi", "224339", ""],
+  ["Municipal Office", "Vaniyambadi", "235317", ""],
+  ["Municipal Commissioner", "Vaniyambadi", "235408", ""],
+  ["Telephone Complaints", "India", "198", ""],
+  ["Passport Seva", "India", "18002581800", "https://www.passportindia.gov.in/"],
+  ["Voter / Election Commission", "India", "1950", "https://voters.eci.gov.in/"],
+  ["Tamil Nadu Ration / TNPDS", "Tamil Nadu", "1967", "https://www.tnpds.gov.in/"],
+  ["Patta / Land e-Services", "Tamil Nadu", "", "https://eservices.tn.gov.in/"],
+  ["Registration Department", "Tamil Nadu", "04174227222", "https://tnreginet.gov.in/"],
+].map(([name, location, phone, website]) => ({
+  name,
+  category: "government",
+  location,
+  phone,
+  website,
+}));
+
+/* =========================================================
+   EMERGENCY
+========================================================= */
+
+const EMERGENCY = [
+  ["Emergency / Unified", "India", "112"],
+  ["Police", "India", "100"],
+  ["Fire & Rescue", "India", "101"],
+  ["Ambulance", "India", "108"],
+  ["Ambulance", "India", "102"],
+  ["Child Helpline", "India", "1098"],
+  ["Women Helpline", "India", "1091"],
+  ["Disaster Control Room", "Tamil Nadu", "1077"],
+  ["State Control Room", "Tamil Nadu", "1070"],
+  ["Police WhatsApp", "Tirupattur District", "9092700100"],
+].map(([name, location, phone]) => ({
+  name,
+  category: "emergency",
+  location,
+  phone,
+}));
+
+/* =========================================================
+   MASTER DIRECTORY
+========================================================= */
+
+const INITIAL_DATA = [
+  ...LOCATIONS,
+  ...SCHOOLS,
+  ...COLLEGES,
+  ...HOSPITALS,
+  ...CLINICS,
+  ...HOTELS,
+  ...LODGES,
+  ...AGENCIES,
+  ...DELIVERY,
+  ...PETROL,
+  ...SHOPS,
+  ...SALONS,
+  ...TEMPLES,
+  ...BANKS,
+  ...ATMS,
+  ...EXTRA,
+  ...GOVERNMENT,
+  ...EMERGENCY,
+];
+
+/* =========================================================
+   HELPERS
+========================================================= */
+
+function categoryInfo(id) {
+  return CATEGORIES.find((x) => x.id === id);
+}
+
+function callNumber(phone) {
+  if (!phone) {
+    Alert.alert("Phone", "Number not available.");
+    return;
+  }
+
+  Linking.openURL(`tel:${String(phone).replace(/[^\d+]/g, "")}`);
+}
+
+function openWhatsApp(phone) {
+  if (!phone) {
+    Alert.alert("WhatsApp", "WhatsApp number not available.");
+    return;
+  }
+
+  let n = String(phone).replace(/[^\d]/g, "");
+
+  if (n.length === 10) n = "91" + n;
+
+  if (n.startsWith("0")) n = "91" + n.substring(1);
+
+  Linking.openURL(`https://wa.me/${n}`);
+}
+
+function openMap(item) {
+  const query = encodeURIComponent(
+    `${item.name} ${item.location} Vaniyambadi Tamil Nadu`
+  );
+
+  Linking.openURL(
+    `https://www.google.com/maps/search/?api=1&query=${query}`
+  );
+}
+
+function openWebsite(url) {
+  if (!url) return;
+
+  Linking.openURL(url).catch(() =>
+    Alert.alert("Website", "Unable to open website.")
+  );
+}
+
+/* =========================================================
+   CARD
+========================================================= */
+
+function Card({ item, isAdmin, onEdit }) {
+  const cat = categoryInfo(item.category);
+
+  return (
+    <View style={styles.card}>
+      <View style={styles.cardHead}>
+        <View style={styles.iconBox}>
+          <Text style={styles.icon}>
+            {cat?.icon || "📌"}
+          </Text>
+        </View>
+
+        <View style={{ flex: 1 }}>
+          <Text style={styles.cardTitle}>
+            {item.name}
+          </Text>
+
+          <Text style={styles.cardCategory}>
+            {cat?.name || item.category}
+          </Text>
+
+          {item.verified && (
+            <Text style={styles.verified}>
+              ✓ Verified source/listing
+            </Text>
+          )}
+        </View>
+      </View>
+
+      <Text style={styles.address}>
+        📍 {item.location || "Location pending"}
+      </Text>
+
+      {item.description && (
+        <Text style={styles.description}>
+          {item.description}
+        </Text>
+      )}
+
+      {item.hours && (
+        <Text style={styles.info}>
+          🕐 {item.hours}
+        </Text>
+      )}
+
+      {item.rating && (
+        <Text style={styles.rating}>
+          ⭐ {item.rating}
+          {item.reviews ? ` • ${item.reviews} reviews` : ""}
+        </Text>
+      )}
+
+      {item.offer && (
+        <View style={styles.offer}>
+          <Text style={styles.offerText}>
+            🎁 {item.offer}
+          </Text>
+        </View>
+      )}
+
+      <View style={styles.actions}>
+        {item.phone && (
+          <TouchableOpacity
+            style={[styles.action, { backgroundColor: "#16a34a" }]}
+            onPress={() => callNumber(item.phone)}
+          >
+            <Text style={styles.actionText}>📞 Call</Text>
+          </TouchableOpacity>
+        )}
+
+        {item.phone && (
+          <TouchableOpacity
+            style={[styles.action, { backgroundColor: "#22c55e" }]}
+            onPress={() => openWhatsApp(item.phone)}
+          >
+            <Text style={styles.actionText}>💬 WhatsApp</Text>
+          </TouchableOpacity>
+        )}
+
+        <TouchableOpacity
+          style={[styles.action, { backgroundColor: "#2563eb" }]}
+          onPress={() => openMap(item)}
+        >
+          <Text style={styles.actionText}>🗺️ Map</Text>
+        </TouchableOpacity>
+
+        {item.website && (
+          <TouchableOpacity
+            style={[styles.action, { backgroundColor: "#7c3aed" }]}
+            onPress={() => openWebsite(item.website)}
+          >
+            <Text style={styles.actionText}>🌐 Website</Text>
+          </TouchableOpacity>
+        )}
+      </View>
+
+      {isAdmin && (
+        <TouchableOpacity
+          style={styles.editButton}
+          onPress={() => onEdit(item)}
+        >
+          <Text style={styles.editText}>
+            ✏️ Admin Edit
+          </Text>
+        </TouchableOpacity>
+      )}
+    </View>
+  );
+}
+
+/* =========================================================
+   HOME
+========================================================= */
+
+function Home({
+  setCategory,
+  openEmergency,
+  openGovernment,
+  openAdmin,
+}) {
+  return (
+    <ScrollView
+      style={styles.screen}
+      contentContainerStyle={styles.home}
+    >
+      <View style={styles.header}>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.brand}>
+            VANIYAMBADI 360
+          </Text>
+          <Text style={styles.tagline}>
+            LOCAL, ALL AROUND
+          </Text>
+        </View>
+
+        <TouchableOpacity
+          style={styles.settings}
+          onPress={openAdmin}
+        >
+          <Text>⚙️</Text>
+        </TouchableOpacity>
+      </View>
+
+      <View style={styles.hero}>
+        <Text style={styles.heroTitle}>
+          VANIYAMBADI
+        </Text>
+
+        <Text style={styles.heroSub}>
+          LOCAL, ALL AROUND
+        </Text>
+
+        <View style={styles.free}>
+          <Text style={styles.freeText}>
+            ✓ PUBLIC ACCESS — FREE
+          </Text>
+        </View>
+
+        <Text style={styles.heroText}>
+          வாணியம்பாடி மற்றும் சுற்றுப்புற
+          local information ஒரே இடத்தில்.
+        </Text>
+      </View>
+
+      <TouchableOpacity
+        style={styles.emergencyBox}
+        onPress={openEmergency}
+      >
+        <Text style={styles.emergencyTitle}>
+          🚨 Emergency Help
+        </Text>
+        <Text style={styles.emergencySub}>
+          Police • Fire • Ambulance • 112
+        </Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={styles.govBox}
+        onPress={openGovernment}
+      >
+        <Text style={styles.govTitle}>
+          🏛️ Government Help
+        </Text>
+        <Text style={styles.govSub}>
+          Aadhaar • e-Sevai • Ration • Voter • Passport
+        </Text>
+      </TouchableOpacity>
+
+      <Text style={styles.sectionTitle}>
+        Explore Vaniyambadi
+      </Text>
+
+      <View style={styles.grid}>
+        {CATEGORIES.filter(
+          (x) =>
+            !["all", "government", "emergency"].includes(x.id)
+        ).map((item) => (
+          <TouchableOpacity
+            key={item.id}
+            style={styles.category}
+            onPress={() => setCategory(item.id)}
+          >
+            <Text style={styles.categoryIcon}>
+              {item.icon}
+            </Text>
+            <Text style={styles.categoryName}>
+              {item.name}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+    </ScrollView>
+  );
+}
+
+/* =========================================================
+   DIRECTORY
+========================================================= */
+
+function Directory({
+  data,
+  category,
+  setCategory,
+  search,
+  setSearch,
+  isAdmin,
+  onEdit,
+}) {
+  const filtered = useMemo(() => {
+    let result = [...data];
+
+    if (category !== "all") {
+      result = result.filter(
+        (x) => x.category === category
+      );
+    }
+
+    const q = search.trim().toLowerCase();
+
+    if (q) {
+      result = result.filter((x) =>
+        [
+          x.name,
+          x.location,
+          x.tamil,
+          x.description,
+          x.category,
+        ]
+          .filter(Boolean)
+          .join(" ")
+          .toLowerCase()
+          .includes(q)
+      );
+    }
+
+    return result.sort((a, b) =>
+      String(a.name).localeCompare(String(b.name))
+    );
+  }, [data, category, search]);
+
+  return (
+    <SafeAreaView style={styles.safe}>
+      <View style={styles.searchHeader}>
+        <Text style={styles.searchTitle}>
+          🔎 Search Directory
+        </Text>
+
+        <Text style={styles.count}>
+          {filtered.length}
+        </Text>
+      </View>
+
+      <View style={styles.searchBox}>
+        <Text style={{ fontSize: 18 }}>🔎</Text>
+
+        <TextInput
+          value={search}
+          onChangeText={setSearch}
+          placeholder="எதை தேடுகிறீர்கள்?"
+          placeholderTextColor="#9ca3af"
+          style={styles.searchInput}
+        />
+      </View>
+
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={styles.chips}
+      >
+        {CATEGORIES.map((item) => (
+          <TouchableOpacity
+            key={item.id}
+            style={[
+              styles.chip,
+              category === item.id &&
+                styles.chipActive,
+            ]}
+            onPress={() => setCategory(item.id)}
+          >
+            <Text
+              style={[
+                styles.chipText,
+                category === item.id &&
+                  styles.chipTextActive,
+              ]}
+            >
+              {item.icon} {item.name}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
+
+      <ScrollView
+        contentContainerStyle={styles.list}
+        showsVerticalScrollIndicator={false}
+      >
+        {filtered.length === 0 ? (
+          <View style={styles.empty}>
+            <Text style={styles.emptyIcon}>
+              🔍
+            </Text>
+
+            <Text style={styles.emptyTitle}>
+              No Results
+            </Text>
+
+            <Text style={styles.emptyText}>
+              இந்த category-ல் data இல்லை.
+              Admin Panel மூலம் add செய்யலாம்.
+            </Text>
+          </View>
+        ) : (
+          filtered.map((item, index) => (
+            <Card
+              key={`${item.name}-${index}`}
+              item={item}
+              isAdmin={isAdmin}
+              onEdit={onEdit}
+            />
+          ))
+        )}
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
+
+/* =========================================================
+   ADMIN LOGIN
+========================================================= */
+
+function AdminLogin({
+  onSuccess,
+  onCancel,
+}) {
+  const [pin, setPin] = useState("");
+
+  function login() {
+    if (pin === ADMIN_PIN) {
+      onSuccess();
+    } else {
+      Alert.alert(
+        "Admin Login",
+        "Wrong PIN."
+      );
+    }
+  }
+
+  return (
+    <SafeAreaView style={styles.safe}>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={
+          Platform.OS === "ios"
+            ? "padding"
+            : undefined
+        }
+      >
+        <View style={styles.login}>
+          <Text style={styles.loginIcon}>
+            🔐
+          </Text>
+
+          <Text style={styles.loginTitle}>
+            VANIYAMBADI 360
+          </Text>
+
+          <Text style={styles.loginSub}>
+            Admin Panel
+          </Text>
+
+          <TextInput
+            value={pin}
+            onChangeText={setPin}
+            placeholder="Enter Admin PIN"
+            secureTextEntry
+            style={styles.pin}
+          />
+
+          <TouchableOpacity
+            style={styles.loginButton}
+            onPress={login}
+          >
+            <Text style={styles.loginButtonText}>
+              🔓 Login
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress={onCancel}
+            style={styles.cancel}
+          >
+            <Text style={styles.cancelText}>
+              Cancel
+            </Text>
+          </TouchableOpacity>
+
+          <Text style={styles.note}>
+            Prototype Admin PIN only.
+            Production version should use
+            backend authentication.
+          </Text>
+        </View>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
+  );
+}
+
+/* =========================================================
+   ADMIN
+========================================================= */
+
+function Admin({
+  data,
+  setData,
+  onLogout,
+  onEdit,
+}) {
+  const [form, setForm] = useState({
+    name: "",
+    category: "shop",
+    location: "",
+    phone: "",
+    website: "",
+    description: "",
+    hours: "",
+    offer: "",
+  });
+
+  function update(key, value) {
+    setForm((old) => ({
+      ...old,
+      [key]: value,
+    }));
+  }
+
+  function add() {
+    if (!form.name.trim()) {
+      Alert.alert("Admin", "Name required.");
+      return;
+    }
+
+    if (!form.location.trim()) {
+      Alert.alert("Admin", "Location required.");
+      return;
+    }
+
+    setData((old) => [
+      {
+        ...form,
+        name: form.name.trim(),
+        location: form.location.trim(),
+        phone: form.phone.trim(),
+        website: form.website.trim(),
+        description: form.description.trim(),
+        hours: form.hours.trim(),
+        offer: form.offer.trim(),
+        verified: true,
+      },
+      ...old,
+    ]);
+
+    setForm({
+      name: "",
+      category: "shop",
+      location: "",
+      phone: "",
+      website: "",
+      description: "",
+      hours: "",
+      offer: "",
+    });
+
+    Alert.alert(
+      "Success",
+      "Listing added."
+    );
+  }
+
+  return (
+    <SafeAreaView style={styles.safe}>
+      <ScrollView
+        contentContainerStyle={styles.admin}
+        keyboardShouldPersistTaps="handled"
+      >
+        <View style={styles.adminHead}>
+          <View>
+            <Text style={styles.adminTitle}>
+              ⚙️ Admin Panel
+            </Text>
+
+            <Text style={styles.adminSub}>
+              Add / Edit / Delete
+            </Text>
+          </View>
+
+          <TouchableOpacity
+            style={styles.logout}
+            onPress={onLogout}
+          >
+            <Text style={styles.logoutText}>
+              Logout
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.adminNotice}>
+          <Text style={styles.noticeTitle}>
+            🔒 Admin Control
+          </Text>
+
+          <Text style={styles.noticeText}>
+            Public users cannot edit listings.
+          </Text>
+
+          <Text style={styles.noticeText}>
+            Payment / AutoPay is OFF.
+          </Text>
+        </View>
+
+        <Text style={styles.formTitle}>
+          ➕ Add New Listing
+        </Text>
+
+        <Input
+          label="Name"
+          value={form.name}
+          onChange={(v) => update("name", v)}
+          placeholder="Business / School / Hospital"
+        />
+
+        <Text style={styles.label}>
+          Category
+        </Text>
+
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+        >
+          {CATEGORIES.filter(
+            (x) =>
+              ![
+                "all",
+                "locations",
+                "government",
+                "emergency",
+              ].includes(x.id)
+          ).map((item) => (
+            <TouchableOpacity
+              key={item.id}
+              style={[
+                styles.adminChip,
+                form.category === item.id &&
+                  styles.adminChipActive,
+              ]}
+              onPress={() =>
+                update("category", item.id)
+              }
+            >
+              <Text
+                style={[
+                  styles.adminChipText,
+                  form.category === item.id &&
+                    styles.adminChipTextActive,
+                ]}
+              >
+                {item.icon}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+
+        <Input
+          label="Address / Location"
+          value={form.location}
+          onChange={(v) => update("location", v)}
+          placeholder="Full address"
+        />
+
+        <Input
+          label="Phone"
+          value={form.phone}
+          onChange={(v) => update("phone", v)}
+          placeholder="Phone number"
+          keyboardType="phone-pad"
+        />
+
+        <Input
+          label="Website"
+          value={form.website}
+          onChange={(v) => update("website", v)}
+          placeholder="https://..."
+          autoCapitalize="none"
+        />
+
+        <Input
+          label="Opening Hours"
+          value={form.hours}
+          onChange={(v) => update("hours", v)}
+          placeholder="09:00 - 21:00"
+        />
+
+        <Input
+          label="Description"
+          value={form.description}
+          onChange={(v) =>
+            update("description", v)
+          }
+          placeholder="Description"
+          multiline
+        />
+
+        <Input
+          label="Offer"
+          value={form.offer}
+          onChange={(v) => update("offer", v)}
+          placeholder="Offer"
+        />
+
+        <TouchableOpacity
+          style={styles.addButton}
+          onPress={add}
+        >
+          <Text style={styles.addText}>
+            ➕ Add Listing
+          </Text>
+        </TouchableOpacity>
+
+        <Text style={styles.formTitle}>
+          📋 Current Listings
+        </Text>
+
+        {data.slice(0, 100).map(
+          (item, index) => (
+            <View
+              key={`${item.name}-${index}`}
+              style={styles.adminRow}
+            >
+              <View style={{ flex: 1 }}>
+                <Text style={styles.rowTitle}>
+                  {item.name}
+                </Text>
+
+                <Text style={styles.rowSub}>
+                  {item.location}
+                </Text>
+              </View>
+
+              <TouchableOpacity
+                style={styles.rowEdit}
+                onPress={() =>
+                  onEdit(item)
+                }
+              >
+                <Text style={styles.rowEditText}>
+                  Edit
+                </Text>
+              </TouchableOpacity>
+            </View>
+          )
+        )}
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
+
+/* =========================================================
+   INPUT
+========================================================= */
+
+function Input({
+  label,
+  value,
+  onChange,
+  placeholder,
+  keyboardType,
+  multiline,
+  autoCapitalize,
+}) {
+  return (
+    <View>
+      <Text style={styles.label}>
+        {label}
+      </Text>
+
+      <TextInput
+        value={value}
+        onChangeText={onChange}
+        placeholder={placeholder}
+        placeholderTextColor="#9ca3af"
+        keyboardType={keyboardType}
+        multiline={multiline}
+        autoCapitalize={autoCapitalize}
+        style={[
+          styles.input,
+          multiline && styles.multiline,
+        ]}
+      />
+    </View>
+  );
+}
+
+/* =========================================================
+   EDIT
+========================================================= */
+
+function Edit({
+  item,
+  setData,
+  close,
+}) {
+  const [form, setForm] = useState({
+    name: item.name || "",
+    category: item.category || "shop",
+    location: item.location || "",
+    phone: item.phone || "",
+    website: item.website || "",
+    description: item.description || "",
+    hours: item.hours || "",
+    offer: item.offer || "",
+  });
+
+  function update(key, value) {
+    setForm((old) => ({
+      ...old,
+      [key]: value,
+    }));
+  }
+
+  function save() {
+    setData((old) =>
+      old.map((x) =>
+        x === item
+          ? { ...x, ...form }
+          : x
+      )
+    );
+
+    Alert.alert(
+      "Saved",
+      "Listing updated."
+    );
+
+    close();
+  }
+
+  function remove() {
+    Alert.alert(
+      "Delete",
+      `Delete ${form.name}?`,
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: () => {
+            setData((old) =>
+              old.filter(
+                (x) => x !== item
+              )
+            );
+            close();
+          },
+        },
+      ]
+    );
+  }
+
+  return (
+    <SafeAreaView style={styles.safe}>
+      <ScrollView
+        contentContainerStyle={styles.admin}
+        keyboardShouldPersistTaps="handled"
+      >
+        <View style={styles.pageHead}>
+          <TouchableOpacity onPress={close}>
+            <Text style={styles.back}>
+              ‹ Back
+            </Text>
+          </TouchableOpacity>
+
+          <Text style={styles.pageTitle}>
+            ✏️ Edit Listing
+          </Text>
+        </View>
+
+        <Input
+          label="Name"
+          value={form.name}
+          onChange={(v) =>
+            update("name", v)
+          }
+          placeholder="Name"
+        />
+
+        <Input
+          label="Category"
+          value={form.category}
+          onChange={(v) =>
+            update("category", v)
+          }
+          placeholder="Category"
+        />
+
+        <Input
+          label="Location"
+          value={form.location}
+          onChange={(v) =>
+            update("location", v)
+          }
+          placeholder="Location"
+        />
+
+        <Input
+          label="Phone"
+          value={form.phone}
+          onChange={(v) =>
+            update("phone", v)
+          }
+          placeholder="Phone"
+        />
+
+        <Input
+          label="Website"
+          value={form.website}
+          onChange={(v) =>
+            update("website", v)
+          }
+          placeholder="Website"
+          autoCapitalize="none"
+        />
+
+        <Input
+          label="Opening Hours"
+          value={form.hours}
+          onChange={(v) =>
+            update("hours", v)
+          }
+          placeholder="Hours"
+        />
+
+        <Input
+          label="Description"
+          value={form.description}
+          onChange={(v) =>
+            update("description", v)
+          }
+          placeholder="Description"
+          multiline
+        />
+
+        <Input
+          label="Offer"
+          value={form.offer}
+          onChange={(v) =>
+            update("offer", v)
+          }
+          placeholder="Offer"
+        />
+
+        <TouchableOpacity
+          style={styles.saveButton}
+          onPress={save}
+        >
+          <Text style={styles.saveText}>
+            💾 Save Changes
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.deleteButton}
+          onPress={remove}
+        >
+          <Text style={styles.deleteText}>
+            🗑️ Delete
+          </Text>
+        </TouchableOpacity>
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
+
+/* =========================================================
+   APP
+========================================================= */
+
+export default function App() {
+  const [data, setData] =
+    useState(INITIAL_DATA);
+
+  const [tab, setTab] =
+    useState("home");
+
+  const [category, setCategory] =
+    useState("all");
+
+  const [search, setSearch] =
+    useState("");
+
+  const [admin, setAdmin] =
+    useState(false);
+
+  const [login, setLogin] =
+    useState(false);
+
+  const [emergency, setEmergency] =
+    useState(false);
+
+  const [government, setGovernment] =
+    useState(false);
+
+  const [editing, setEditing] =
+    useState(null);
+
+  if (login) {
+    return (
+      <AdminLogin
+        onSuccess={() => {
+          setLogin(false);
+          setAdmin(true);
+          setTab("admin");
+        }}
+        onCancel={() =>
+          setLogin(false)
+        }
+      />
+    );
+  }
+
+  if (editing) {
+    return (
+      <Edit
+        item={editing}
+        setData={setData}
+        close={() =>
+          setEditing(null)
+        }
+      />
+    );
+  }
+
+  if (emergency) {
+    return (
+      <SafeAreaView style={styles.safe}>
+        <View style={styles.pageHead}>
+          <TouchableOpacity
+            onPress={() =>
+              setEmergency(false)
+            }
+          >
+            <Text style={styles.back}>
+              ‹ Back
+            </Text>
+          </TouchableOpacity>
+
+          <Text style={styles.pageTitle}>
+            🚨 Emergency Help
+          </Text>
+        </View>
+
+        <ScrollView
+          contentContainerStyle={styles.list}
+        >
+          {EMERGENCY.map(
+            (item, index) => (
+              <Card
+                key={index}
+                item={item}
+                isAdmin={false}
+                onEdit={() => {}}
+              />
+            )
+          )}
+        </ScrollView>
+      </SafeAreaView>
+    );
+  }
+
+  if (government) {
+    return (
+      <SafeAreaView style={styles.safe}>
+        <View style={styles.pageHead}>
+          <TouchableOpacity
+            onPress={() =>
+              setGovernment(false)
+            }
+          >
+            <Text style={styles.back}>
+              ‹ Back
+            </Text>
+          </TouchableOpacity>
+
+          <Text style={styles.pageTitle}>
+            🏛️ Government Help
+          </Text>
+        </View>
+
+        <ScrollView
+          contentContainerStyle={styles.list}
+        >
+          {GOVERNMENT.map(
+            (item, index) => (
+              <Card
+                key={index}
+                item={item}
+                isAdmin={false}
+                onEdit={() => {}}
+              />
+            )
+          )}
+        </ScrollView>
+      </SafeAreaView>
+    );
+  }
+
+  return (
+    <SafeAreaView style={styles.safe}>
+      {tab === "home" && (
+        <Home
+          setCategory={(x) => {
+            setCategory(x);
+            setTab("search");
+          }}
+          openEmergency={() =>
+            setEmergency(true)
+          }
+          openGovernment={() =>
+            setGovernment(true)
+          }
+          openAdmin={() => {
+            if (admin) {
+              setTab("admin");
+            } else {
+              setLogin(true);
+            }
+          }}
+        />
+      )}
+
+      {tab === "search" && (
+        <Directory
+          data={data}
+          category={category}
+          setCategory={setCategory}
+          search={search}
+          setSearch={setSearch}
+          isAdmin={admin}
+          onEdit={(item) =>
+            setEditing(item)
+          }
+        />
+      )}
+
+      {tab === "admin" &&
+        admin && (
+          <Admin
+            data={data}
+            setData={setData}
+            onLogout={() => {
+              setAdmin(false);
+              setTab("home");
+            }}
+            onEdit={(item) =>
+              setEditing(item)
+            }
+          />
+        )}
+
+      <View style={styles.nav}>
+        <TouchableOpacity
+          onPress={() => setTab("home")}
+          style={styles.navItem}
+        >
+          <Text style={styles.navIcon}>
+            🏠
+          </Text>
+          <Text style={styles.navText}>
+            Home
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          onPress={() =>
+            setTab("search")
+          }
+          style={styles.navItem}
+        >
+          <Text style={styles.navIcon}>
+            🔎
+          </Text>
+          <Text style={styles.navText}>
+            Search
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          onPress={() =>
+            setEmergency(true)
+          }
+          style={styles.navItem}
+        >
+          <Text style={styles.navIcon}>
+            🚨
+          </Text>
+          <Text style={styles.navText}>
+            Emergency
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          onPress={() => {
+            if (admin) {
+              setTab("admin");
+            } else {
+              setLogin(true);
+            }
+          }}
+          style={styles.navItem}
+        >
+          <Text style={styles.navIcon}>
+            ⚙️
+          </Text>
+          <Text style={styles.navText}>
+            Admin
+          </Text>
+        </TouchableOpacity>
+      </View>
+    </SafeAreaView>
+  );
+}
+
+/* =========================================================
+   STYLES
+========================================================= */
+
+const styles = StyleSheet.create({
+  safe: {
+    flex: 1,
+    backgroundColor: "#f5f7fb",
+  },
+
+  screen: {
+    flex: 1,
+  },
+
+  home: {
+    padding: 16,
+    paddingBottom: 110,
+  },
+
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 15,
+  },
+
+  brand: {
+    fontSize: 23,
+    fontWeight: "900",
+    color: "#111827",
+  },
+
+  tagline: {
+    fontSize: 12,
+    color: "#64748b",
+    fontWeight: "800",
+    marginTop: 2,
+  },
+
+  settings: {
+    width: 44,
+    height: 44,
+    backgroundColor: "#111827",
+    borderRadius: 14,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+
+  hero: {
+    backgroundColor: "#111827",
+    borderRadius: 23,
+    padding: 22,
+    marginBottom: 12,
+  },
+
+  heroTitle: {
+    color: "#fff",
+    fontSize: 29,
+    fontWeight: "900",
+  },
+
+  heroSub: {
+    color: "#93c5fd",
+    fontSize: 14,
+    fontWeight: "900",
+  },
+
+  free: {
+    backgroundColor: "#16a34a",
+    alignSelf: "flex-start",
+    paddingHorizontal: 11,
+    paddingVertical: 7,
+    borderRadius: 20,
+    marginTop: 13,
+  },
+
+  freeText: {
+    color: "#fff",
+    fontWeight: "900",
+    fontSize: 10,
+  },
+
+  heroText: {
+    color: "#d1d5db",
+    lineHeight: 20,
+    marginTop: 13,
+  },
+
+  emergencyBox: {
+    backgroundColor: "#dc2626",
+    borderRadius: 18,
+    padding: 18,
+    marginBottom: 10,
+  },
+
+  emergencyTitle: {
+    color: "#fff",
+    fontSize: 18,
+    fontWeight: "900",
+  },
+
+  emergencySub: {
+    color: "#fee2e2",
+    marginTop: 4,
+  },
+
+  govBox: {
+    backgroundColor: "#1d4ed8",
+    borderRadius: 18,
+    padding: 18,
+    marginBottom: 20,
+  },
+
+  govTitle: {
+    color: "#fff",
+    fontSize: 18,
+    fontWeight: "900",
+  },
+
+  govSub: {
+    color: "#dbeafe",
+    marginTop: 4,
+  },
+
+  sectionTitle: {
+    fontSize: 19,
+    fontWeight: "900",
+    color: "#111827",
+    marginBottom: 12,
+  },
+
+  grid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+  },
+
+  category: {
+    width: "31.5%",
+    minHeight: 92,
+    backgroundColor: "#fff",
+    borderRadius: 17,
+    marginBottom: 10,
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 8,
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+  },
+
+  categoryIcon: {
+    fontSize: 28,
+    marginBottom: 5,
+  },
+
+  categoryName: {
+    textAlign: "center",
+    color: "#374151",
+    fontSize: 10,
+    fontWeight: "800",
+  },
+
+  searchHeader: {
+    padding: 16,
+    paddingBottom: 9,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+
+  searchTitle: {
+    fontSize: 21,
+    fontWeight: "900",
+    color: "#111827",
+  },
+
+  count: {
+    marginLeft: "auto",
+    color: "#64748b",
+    fontWeight: "800",
+  },
+
+  searchBox: {
+    marginHorizontal: 16,
+    height: 52,
+    backgroundColor: "#fff",
+    borderRadius: 15,
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 13,
+  },
+
+  searchInput: {
+    flex: 1,
+    marginLeft: 8,
+    fontSize: 15,
+    color: "#111827",
+  },
+
+  chips: {
+    paddingHorizontal: 16,
+    paddingVertical: 11,
+    maxHeight: 58,
+  },
+
+  chip: {
+    backgroundColor: "#fff",
+    borderRadius: 18,
+    paddingHorizontal: 11,
+    paddingVertical: 8,
+    marginRight: 7,
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+  },
+
+  chipActive: {
+    backgroundColor: "#111827",
+    borderColor: "#111827",
+  },
+
+  chipText: {
+    color: "#374151",
+    fontSize: 11,
+    fontWeight: "800",
+  },
+
+  chipTextActive: {
+    color: "#fff",
+  },
+
+  list: {
+    padding: 16,
+    paddingBottom: 110,
+  },
+
+  card: {
+    backgroundColor: "#fff",
+    borderRadius: 19,
+    padding: 15,
+    marginBottom: 11,
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+  },
+
+  cardHead: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+
+  iconBox: {
+    width: 48,
+    height: 48,
+    borderRadius: 14,
+    backgroundColor: "#eff6ff",
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 11,
+  },
+
+  icon: {
+    fontSize: 25,
+  },
+
+  cardTitle: {
+    fontSize: 15,
+    fontWeight: "900",
+    color: "#111827",
+  },
+
+  cardCategory: {
+    fontSize: 11,
+    color: "#64748b",
+    marginTop: 2,
+  },
+
+  verified: {
+    color: "#16a34a",
+    fontSize: 10,
+    fontWeight: "900",
+    marginTop: 3,
+  },
+
+  address: {
+    color: "#4b5563",
+    fontSize: 13,
+    lineHeight: 19,
+    marginTop: 12,
+  },
+
+  description: {
+    color: "#6b7280",
+    fontSize: 12,
+    lineHeight: 18,
+    marginTop: 6,
+  },
+
+  info: {
+    color: "#4b5563",
+    fontSize: 12,
+    marginTop: 6,
+  },
+
+  rating: {
+    color: "#b45309",
+    fontSize: 12,
+    fontWeight: "800",
+    marginTop: 6,
+  },
+
+  offer: {
+    backgroundColor: "#fef3c7",
+    padding: 8,
+    borderRadius: 9,
+    marginTop: 8,
+  },
+
+  offerText: {
+    color: "#92400e",
+    fontWeight: "900",
+  },
+
+  actions: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    marginTop: 12,
+  },
+
+  action: {
+    borderRadius: 9,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    marginRight: 6,
+    marginBottom: 6,
+  },
+
+  actionText: {
+    color: "#fff",
+    fontSize: 10,
+    fontWeight: "900",
+  },
+
+  editButton: {
+    backgroundColor: "#111827",
+    borderRadius: 10,
+    padding: 10,
+    alignItems: "center",
+    marginTop: 4,
+  },
+
+  editText: {
+    color: "#fff",
+    fontWeight: "900",
+    fontSize: 11,
+  },
+
+  empty: {
+    backgroundColor: "#fff",
+    padding: 35,
+    borderRadius: 18,
+    alignItems: "center",
+  },
+
+  emptyIcon: {
+    fontSize: 40,
+  },
+
+  emptyTitle: {
+    fontSize: 18,
+    fontWeight: "900",
+    marginTop: 8,
+  },
+
+  emptyText: {
+    textAlign: "center",
+    color: "#6b7280",
+    marginTop: 5,
+  },
+
+  pageHead: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 16,
+    backgroundColor: "#fff",
+    borderBottomWidth: 1,
+    borderBottomColor: "#e5e7eb",
+  },
+
+  back: {
+    color: "#2563eb",
+    fontWeight: "900",
+    fontSize: 16,
+    marginRight: 15,
+  },
+
+  pageTitle: {
+    fontSize: 19,
+    fontWeight: "900",
+    color: "#111827",
+  },
+
+  login: {
+    flex: 1,
+    justifyContent: "center",
+    padding: 25,
+  },
+
+  loginIcon: {
+    textAlign: "center",
+    fontSize: 55,
+  },
+
+  loginTitle: {
+    textAlign: "center",
+    fontSize: 24,
+    fontWeight: "900",
+    marginTop: 12,
+  },
+
+  loginSub: {
+    textAlign: "center",
+    color: "#64748b",
+    marginBottom: 22,
+  },
+
+  pin: {
+    backgroundColor: "#fff",
+    borderWidth: 1,
+    borderColor: "#d1d5db",
+    height: 52,
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    marginBottom: 12,
+  },
+
+  loginButton: {
+    height: 52,
+    backgroundColor: "#111827",
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  loginButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "900",
+  },
+
+  cancel: {
+    alignItems: "center",
+    padding: 15,
+  },
+
+  cancelText: {
+    color: "#2563eb",
+    fontWeight: "800",
+  },
+
+  note: {
+    textAlign: "center",
+    color: "#9ca3af",
+    fontSize: 11,
+    lineHeight: 17,
+    marginTop: 15,
+  },
+
+  admin: {
+    padding: 16,
+    paddingBottom: 110,
+  },
+
+  adminHead: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 14,
+  },
+
+  adminTitle: {
+    fontSize: 22,
+    fontWeight: "900",
+  },
+
+  adminSub: {
+    color: "#64748b",
+    marginTop: 3,
+  },
+
+  logout: {
+    marginLeft: "auto",
+    backgroundColor: "#fee2e2",
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+    borderRadius: 10,
+  },
+
+  logoutText: {
+    color: "#b91c1c",
+    fontWeight: "900",
+  },
+
+  adminNotice: {
+    backgroundColor: "#ecfdf5",
+    borderColor: "#a7f3d0",
+    borderWidth: 1,
+    borderRadius: 15,
+    padding: 13,
+    marginBottom: 18,
+  },
+
+  noticeTitle: {
+    color: "#065f46",
+    fontWeight: "900",
+  },
+
+  noticeText: {
+    color: "#047857",
+    fontSize: 12,
+    marginTop: 3,
+  },
+
+  formTitle: {
+    fontSize: 18,
+    fontWeight: "900",
+    marginBottom: 12,
+  },
+
+  label: {
+    fontSize: 12,
+    fontWeight: "900",
+    color: "#374151",
+    marginBottom: 6,
+  },
+
+  input: {
+    backgroundColor: "#fff",
+    borderWidth: 1,
+    borderColor: "#d1d5db",
+    borderRadius: 12,
+    minHeight: 48,
+    paddingHorizontal: 13,
+    marginBottom: 12,
+    color: "#111827",
+  },
+
+  multiline: {
+    minHeight: 90,
+    textAlignVertical: "top",
+    paddingTop: 12,
+  },
+
+  adminChip: {
+    backgroundColor: "#fff",
+    borderWidth: 1,
+    borderColor: "#d1d5db",
+    padding: 10,
+    borderRadius: 11,
+    marginRight: 6,
+    marginBottom: 12,
+  },
+
+  adminChipActive: {
+    backgroundColor: "#111827",
+  },
+
+  adminChipText: {
+    fontSize: 20,
+  },
+
+  adminChipTextActive: {
+    color: "#fff",
+  },
+
+  addButton: {
+    backgroundColor: "#16a34a",
+    minHeight: 52,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 22,
+  },
+
+  addText: {
+    color: "#fff",
+    fontSize: 15,
+    fontWeight: "900",
+  },
+
+  adminRow: {
+    backgroundColor: "#fff",
+    borderRadius: 13,
+    padding: 12,
+    marginBottom: 7,
+    flexDirection: "row",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+  },
+
+  rowTitle: {
+    fontWeight: "900",
+    fontSize: 13,
+  },
+
+  rowSub: {
+    color: "#64748b",
+    fontSize: 10,
+    marginTop: 3,
+  },
+
+  rowEdit: {
+    backgroundColor: "#dbeafe",
+    paddingHorizontal: 11,
+    paddingVertical: 8,
+    borderRadius: 9,
+  },
+
+  rowEditText: {
+    color: "#1d4ed8",
+    fontWeight: "900",
+    fontSize: 11,
+  },
+
+  saveButton: {
+    backgroundColor: "#2563eb",
+    minHeight: 52,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 8,
+  },
+
+  saveText: {
+    color: "#fff",
+    fontWeight: "900",
+    fontSize: 15,
+  },
+
+  deleteButton: {
+    backgroundColor: "#fee2e2",
+    minHeight: 52,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 10,
+  },
+
+  deleteText: {
+    color: "#b91c1c",
+    fontWeight: "900",
+  },
+
+  nav: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: 76,
+    backgroundColor: "#fff",
+    borderTopWidth: 1,
+    borderTopColor: "#e5e7eb",
+    flexDirection: "row",
+    justifyContent: "space-around",
+    alignItems: "center",
+    paddingBottom: 6,
+  },
+
+  navItem: {
+    alignItems: "center",
+    minWidth: 65,
+  },
+
+  navIcon: {
+    fontSize: 20,
+  },
+
+  navText: {
+    fontSize: 10,
+    fontWeight: "800",
+    color: "#64748b",
+    marginTop: 2,
+  },
+});
