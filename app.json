@@ -1,72 +1,123 @@
+// VANIYAMBADI 360
+// LOCAL, ALL AROUND
+// Single-file Expo / React Native App.js
+
 import React, { useMemo, useState } from "react";
 import {
+  Alert,
+  Linking,
   SafeAreaView,
-  View,
+  ScrollView,
+  StatusBar,
+  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  ScrollView,
-  StyleSheet,
-  Linking,
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
+  View,
 } from "react-native";
 
-/* =========================================================
-   VANIYAMBADI 360
-   VANIYAMBADI.83
-   LOCAL, ALL AROUND
-
-   PUBLIC  = FREE
-   ADMIN PIN = 360ADMIN
-
-   Prototype:
-   - Member
-   - Shop Owner
-   - Admin
-   - Posts
-   - Photos
-   - Reels
-   - Membership ₹300
-========================================================= */
-
 const ADMIN_PIN = "360ADMIN";
+const MEMBERSHIP_PRICE = 300;
 
-/* =========================================================
-   OLD / ORIGINAL CATEGORY ICONS
-========================================================= */
+/* =========================
+   CATEGORIES
+========================= */
 
 const CATEGORIES = [
-  ["all", "🔎", "All"],
-  ["locations", "📍", "Locations / ஊர்கள்"],
-  ["hospital", "🏥", "Hospitals"],
-  ["clinic", "🩺", "Clinics"],
-  ["school", "🏫", "Schools"],
-  ["college", "🎓", "Colleges"],
-  ["hotel", "🍴", "Hotels"],
-  ["lodge", "🏨", "Lodges"],
-  ["agency", "🏢", "Agencies"],
-  ["delivery", "🛵", "Delivery / Courier"],
-  ["supermarket", "🛒", "Super Markets"],
-  ["shop", "🏪", "Shops"],
-  ["petrol", "⛽", "Petrol Bunks"],
-  ["bank", "🏦", "Banks"],
-  ["atm", "🏧", "ATMs"],
-  ["salon", "💇", "Salon"],
-  ["temple", "🛕", "Temples"],
-  ["railway", "🚉", "Railway"],
-  ["highway", "🛣️", "Highway"],
-  ["gold", "🥇", "Gold Rate"],
-  ["reels", "🎬", "Reels"],
-  ["offers", "🎁", "Offers"],
-  ["government", "🏛️", "Government"],
-  ["emergency", "🚨", "Emergency"],
+  { id: "all", icon: "🔎", name: "All" },
+  { id: "locations", icon: "📍", name: "Locations / ஊர்கள்" },
+  { id: "hospital", icon: "🏥", name: "Hospitals" },
+  { id: "clinic", icon: "🩺", name: "Clinics" },
+  { id: "school", icon: "🏫", name: "Schools" },
+  { id: "college", icon: "🎓", name: "Colleges" },
+  { id: "hotel", icon: "🍴", name: "Hotels" },
+  { id: "lodge", icon: "🏨", name: "Lodges" },
+  { id: "agency", icon: "🏢", name: "Agencies" },
+  { id: "delivery", icon: "🛵", name: "Delivery / Courier" },
+  { id: "supermarket", icon: "🛒", name: "Super Markets" },
+  { id: "shop", icon: "🏪", name: "Shops" },
+  { id: "petrol", icon: "⛽", name: "Petrol Bunks" },
+  { id: "bank", icon: "🏦", name: "Banks" },
+  { id: "atm", icon: "🏧", name: "ATMs" },
+  { id: "salon", icon: "💇", name: "Salon" },
+  { id: "temple", icon: "🛕", name: "Temples" },
+  { id: "railway", icon: "🚉", name: "Railway" },
+  { id: "highway", icon: "🛣️", name: "Highway" },
+  { id: "gold", icon: "🥇", name: "Gold Rate" },
+  { id: "reels", icon: "🎬", name: "Reels" },
+  { id: "offers", icon: "🎁", name: "Offers" },
+  { id: "government", icon: "🏛️", name: "Government" },
+  { id: "emergency", icon: "🚨", name: "Emergency" },
 ];
 
-/* =========================================================
-   ORIGINAL DATA
-========================================================= */
+/* =========================
+   HELPERS
+========================= */
+
+function makeId(prefix = "item") {
+  return (
+    prefix +
+    "_" +
+    Date.now().toString(36) +
+    "_" +
+    Math.random().toString(36).slice(2, 7)
+  );
+}
+
+function categoryInfo(id) {
+  return CATEGORIES.find((x) => x.id === id);
+}
+
+function callNumber(phone) {
+  if (!phone) {
+    Alert.alert("Phone", "Number not available.");
+    return;
+  }
+
+  const number = String(phone).replace(/[^\d+]/g, "");
+  Linking.openURL(`tel:${number}`);
+}
+
+function openWhatsApp(phone) {
+  if (!phone) {
+    Alert.alert("WhatsApp", "WhatsApp number not available.");
+    return;
+  }
+
+  let number = String(phone).replace(/[^\d]/g, "");
+
+  if (number.length === 10) {
+    number = "91" + number;
+  }
+
+  if (number.startsWith("0")) {
+    number = "91" + number.substring(1);
+  }
+
+  Linking.openURL(`https://wa.me/${number}`);
+}
+
+function openMap(item) {
+  const query = encodeURIComponent(
+    `${item.name || ""} ${item.location || ""} Vaniyambadi Tamil Nadu`
+  );
+
+  Linking.openURL(
+    `https://www.google.com/maps/search/?api=1&query=${query}`
+  );
+}
+
+function openWebsite(url) {
+  if (!url) return;
+
+  Linking.openURL(url).catch(() => {
+    Alert.alert("Website", "Unable to open website.");
+  });
+}
+
+/* =========================
+   LOCATIONS
+========================= */
 
 const LOCATIONS = [
   ["Vaniyambadi", "வாணியம்பாடி"],
@@ -90,15 +141,20 @@ const LOCATIONS = [
   ["Jandamedu", "ஜண்டாமேடு"],
   ["Valayambattu", "வளையாம்பட்டு"],
   ["Chennampet", "சென்னாம்பேட்டை"],
-].map(([name, tamil]) => ({
-  name,
-  tamil,
+].map((x, i) => ({
+  id: `location_${i}`,
   category: "locations",
-  location: `${tamil}, Vaniyambadi`,
-  description: `${name} — ${tamil}`,
+  name: x[0],
+  tamilName: x[1],
+  location: x[0],
+  description: x[1],
 }));
 
-const SCHOOL_NAMES = [
+/* =========================
+   SCHOOLS
+========================= */
+
+const SCHOOLS = [
   ["T.V.K.V. School", "Nethaji Nagar"],
   ["Municipal Muslim Girls Middle School", "Fort"],
   ["Municipal Higher Secondary School", "Gandhi Nagar"],
@@ -125,14 +181,16 @@ const SCHOOL_NAMES = [
   ["Islamiah Higher Secondary School", "Fort"],
   ["Islamiah Girls Higher Secondary School", "Noorullahpet"],
   ["Madhare-Se Niswan", "Muslimpur"],
-];
-
-const SCHOOLS = SCHOOL_NAMES.map(([name, location]) => ({
-  name,
+].map((x, i) => ({
+  id: `school_${i}`,
   category: "school",
-  location: `${location}, Vaniyambadi`,
-  verified: true,
+  name: x[0],
+  location: x[1],
 }));
+
+/* =========================
+   COLLEGES
+========================= */
 
 const COLLEGES = [
   ["Islamiah College", "New Town, Vaniyambadi"],
@@ -143,64 +201,82 @@ const COLLEGES = [
   ["Priyadarshini Polytechnic College", "Vaniyambadi area"],
   ["Vaani College of Education", "Vaniyambadi"],
   ["Government ITI", "Vaniyambadi"],
-  ["Ar Rahman College of Allied Health", "Pallan Khaleelur Rahman Street, Vaniyambadi"],
-  ["Annai Nursing College & Allied Health Science", "CN Annadurai Road, Vaniyambadi"],
-].map(([name, location]) => ({
-  name,
+  [
+    "Ar Rahman College of Allied Health",
+    "Pallan Khaleelur Rahman Street, Vaniyambadi",
+  ],
+  [
+    "Annai Nursing College & Allied Health Science",
+    "CN Annadurai Road, Vaniyambadi",
+  ],
+].map((x, i) => ({
+  id: `college_${i}`,
   category: "college",
-  location,
-  verified: true,
+  name: x[0],
+  location: x[1],
 }));
+
+/* =========================
+   HOSPITALS
+========================= */
 
 const HOSPITALS = [
   ["Government Hospital", "Jamath Road, Vaniyambadi", "225700"],
-  ["Kafeel Emergency Care Unit", "PJN Road, Vaniyambadi", "9944238110"],
-  ["Ikram Hospital", "147, Mandi Dadamiyan Street, Neelfield", "944338668"],
-  ["Fyyaz Kamal Hospital", "24/2/1, PJN Road", "9345970089"],
-  ["Dr. Vasantha Hospital", "4/1, PJN Road", "9952778962"],
-  ["Riya Maternity Hospital", "265, PJN Road", ""],
-  ["AR Rahman Hospital", "Hameenabad, Khaderpet", ""],
-  ["Dr. Parvathi Hospital", "Malang Road, Khaderpet", ""],
-  ["David Hospital", "Railway Station Road, Vaniyambadi", ""],
-  ["Vijaya Ortho Care and Hospital", "Jamath Road, Noorullahpet", "9003622638"],
-  ["Sadha Hospital", "Bypass Road, New Town", "9994214888"],
+  ["Kafeel Emergency Care Unit (Azeem Hospital)", "PJN Road, Vaniyambadi", "9944238110"],
+  ["Ikram Hospital", "147, Mandi Dadamiyan Street, Neelfield, Vaniyambadi", "944338668"],
+  ["Fyyaz Kamal Hospital", "24/2/1, PJN Road, Vaniyambadi", "9345970089"],
+  ["Dr. Vasantha Hospital", "4/1, PJN Road, Vaniyambadi", "9952778962"],
+  ["Riya Maternity Hospital", "265, PJN Road, Vaniyambadi", ""],
+  ["AR Rahman Hospital", "Hameenabad, Khaderpet, Vaniyambadi", ""],
+  ["Dr. Parvathi Hospital", "Malang Road, Khaderpet, Vaniyambadi", ""],
+  ["David Hospital", "Opp. Khaderpet Masjid, Railway Station Road, Vaniyambadi", ""],
+  ["Vijaya Ortho Care and Hospital", "283/20, Jamath Road, Noorullahpet, Vaniyambadi", "9003622638"],
+  ["Sadha Hospital", "Bypass Road, New Town, Vaniyambadi", "9994214888"],
   ["Dr. Akbar Kouser", "New Town, Vaniyambadi", ""],
-  ["Karunai Illam", "Perumalpet, Vaniyambadi", ""],
-  ["Sugam Multi-Speciality Hospital", "CN Annadurai Road", "8111055539"],
-  ["Ayesha Hospital", "Kaniyambadi Street, Neelfield", "9894474730"],
+  ["Karunai Illam", "124/K, Alangayam Cross Road, Perumalpet, Vaniyambadi", ""],
+  ["Sugam Multi-Speciality Hospital", "CN Annadurai Road, Near Railway Gate", "8111055539"],
+  ["Ayesha Hospital", "2/25, Kaniyambadi Street, Neelfield", "9894474730"],
   ["ARSH Maternity & Surgical Care", "Mandi Street, Neelfield", "6383612329"],
   ["A R Speciality Hospital", "CL Road, Neelfield", "8940327070"],
   ["Care & Cure Centre", "Cutchery Road, Neelfield", "4174320206"],
-  ["Kaleef Dialysis Hospital", "Shakirabad", ""],
-  ["Azeem Multispeciality Dental Care", "Shakirabad", ""],
-  ["Arivu Dental Care", "Mandi Dhadhemiyan Street", ""],
+  ["Kaleef Dialysis Hospital", "Shakirabad, Vaniyambadi", ""],
+  ["Azeem Multispeciality Dental Care Center", "Shakirabad, Vaniyambadi", ""],
+  ["Arivu Dental Care", "Mandi Dhadhemiyan Street, Neelfield", ""],
   ["Best Laser Dental Clinic", "CL Road, Khaderpet", ""],
-  ["Al-Ameen Unani Multispeciality Clinic", "PJN Road", "8667436515"],
-  ["Al Sadiq Multispeciality Clinic", "Basheerabad", "8610033503"],
+  ["Al-Ameen Unani Multispeciality Clinic & Hijama", "PJN Road", "8667436515"],
+  ["Al Sadiq Multispeciality Clinic & Hijamah Centre", "Salamabad Main Road, Basheerabad", "8610033503"],
   ["Apollo 24|7 Lab Test Vaniyambadi", "CL Road, Khaderpet", "8045572851"],
-].map(([name, location, phone]) => ({
-  name,
+].map((x, i) => ({
+  id: `hospital_${i}`,
   category: "hospital",
-  location,
-  phone,
-  verified: true,
+  name: x[0],
+  location: x[1],
+  phone: x[2],
 }));
 
+/* =========================
+   CLINICS
+========================= */
+
 const CLINICS = [
-  ["Dr. Siva Subramaniyam M.B.B.S", "Perumalpet", "8870331718"],
-  ["Dr. Tamil Selvi M.B.B.S", "New Town", "9443019307"],
-  ["Dr. Moda Amjad Basha M.B.B.S", "Neelfield", "9500912531"],
-  ["D. Ejaz Ahmed M.B.B.S", "PJN Road", "9791338545"],
-  ["Dr. Arivumani M.B.B.S", "Pudur", ""],
-  ["Ayesha Hospital Clinic", "Neelfield", "9894474730"],
-  ["Dr. Syed Farouk Ahmed M.B.B.S", "PJN Road", "9980511640"],
-].map(([name, location, phone]) => ({
-  name,
+  ["Dr. Siva Subramaniyam M.B.B.S", "Bypass Road, Thendral Nagar, Perumalpet", "8870331718"],
+  ["Dr. Tamil Selvi M.B.B.S", "81, New Street, New Town", "9443019307"],
+  ["Dr. Moda Amjad Basha M.B.B.S", "1304, Meddaikar Street, Neelfield", "9500912531"],
+  ["D. Ejaz Ahmed M.B.B.S", "19, PJN Road", "9791338545"],
+  ["Dr. Arivumani M.B.B.S", "Mariyamman Koil Street, Pudur", ""],
+  ["Ayesha Hospital Clinic", "2/25, Kaniyambadi Street, Neelfield", "9894474730"],
+  ["Dr. Syed Farouk Ahmed M.B.B.S / B.A. Shukoor Hospital", "1240, PJN Road", "9980511640"],
+].map((x, i) => ({
+  id: `clinic_${i}`,
   category: "clinic",
-  location: `${location}, Vaniyambadi`,
-  phone,
-  verified: true,
+  name: x[0],
+  location: x[1],
+  phone: x[2],
 }));
+
+/* =========================
+   HOTELS
+========================= */
 
 const HOTELS = [
   ["Vasantha Vihar", "15, C.N.A. Road", "Vegetarian Restaurant"],
@@ -209,13 +285,17 @@ const HOTELS = [
   ["Madras Hotel", "23, C.N.A. Road", "Non-Vegetarian Restaurant"],
   ["Rahamathiya Hotel", "C.N.A. Road", "Non-Vegetarian Restaurant"],
   ["Ahamathiya Hotel", "C.N.A. Road", "Non-Vegetarian Restaurant"],
-].map(([name, location, description]) => ({
-  name,
+].map((x, i) => ({
+  id: `hotel_${i}`,
   category: "hotel",
-  location: `${location}, Vaniyambadi`,
-  description,
-  verified: true,
+  name: x[0],
+  location: x[1],
+  description: x[2],
 }));
+
+/* =========================
+   LODGES
+========================= */
 
 const LODGES = [
   ["Municipal Lodge", "C.N.A. Road, Bus Stand"],
@@ -226,115 +306,150 @@ const LODGES = [
   ["Vetri Lodge", "C.L. Road"],
   ["Naveen Lodge", "Madurai Street"],
   ["Padmavathi Annamalai", "P.J.N. Road"],
-].map(([name, location]) => ({
-  name,
+].map((x, i) => ({
+  id: `lodge_${i}`,
   category: "lodge",
-  location: `${location}, Vaniyambadi`,
-  description: "Lodging",
+  name: x[0],
+  location: x[1],
 }));
+
+/* =========================
+   AGENCIES
+========================= */
 
 const AGENCIES = [
   ["J.K. Agencies", "C.L. Road, Vaniyambadi", ""],
   ["Rainbow", "C.L. Road, Vaniyambadi", ""],
-  ["Sathya Agencies", "CAN Road, Near Bus Stand", "+917305958985"],
+  ["Sathya Agencies", "157/A2, CAN Road, Near Bus Stand, Vaniyambadi", "+917305958985"],
   ["Amul Distributor", "Vaniyambadi", ""],
-].map(([name, location, phone]) => ({
-  name,
+].map((x, i) => ({
+  id: `agency_${i}`,
   category: "agency",
-  location,
-  phone,
+  name: x[0],
+  location: x[1],
+  phone: x[2],
 }));
+
+/* =========================
+   DELIVERY
+========================= */
 
 const DELIVERY = [
-  ["DHT Global Express International Courier", "CN Annadurai Road", "+919042577651"],
-  ["ST Courier - Vaniyambadi", "Khaderpet", "+919994859147"],
-  ["Blue Dart Express Limited", "CN Annadurai Road", "+912269751234"],
-  ["VRL Logistics Ltd", "Bypass Street", "+9118005997800"],
-  ["A1 Travels & Speed Parcel Service", "Jinnah Road", "+919514604998"],
-  ["AKR Express Parcel Service", "Konamedu", "+919443123217"],
-  ["Liberty Express", "CN Annadurai Road", "+919944729904"],
-  ["Trackon Couriers", "Khaderpet", "+914162256242"],
-].map(([name, location, phone]) => ({
-  name,
+  ["DHT Global Express International Courier", "CN Annadurai Road, Nadar Colony, Teachers Colony", "+919042577651"],
+  ["ST Courier - Vaniyambadi", "665, Munisamy Pillai Street, Khaderpet", "+919994859147"],
+  ["Blue Dart Express Limited", "Shop No.4 Matha Lodge, 1062/A, CN Annadurai Road, Near Fire Station", "+912269751234"],
+  ["VRL Logistics Ltd - Vaniyambadi", "Bypass Street, Near Mugal Garden, Miyan Nagar", "+9118005997800"],
+  ["A1 Travels & Speed Parcel Service", "46, Jinnah Road, Vaniyambadi", "+919514604998"],
+  ["AKR Express Parcel Service", "No.1057/D5, Matha Lodge, Trunk Road, Konamedu", "+919443123217"],
+  ["Liberty Express", "84 CN Annadurai Road, Khaderpet, Teachers Colony", "+919944729904"],
+  ["Trackon Couriers", "451 Jinnah Road, Khaderpet", "+914162256242"],
+].map((x, i) => ({
+  id: `delivery_${i}`,
   category: "delivery",
-  location: `${location}, Vaniyambadi`,
-  phone,
+  name: x[0],
+  location: x[1],
+  phone: x[2],
 }));
+
+/* =========================
+   PETROL
+========================= */
 
 const PETROL = [
-  ["Hindustan Petroleum", "Islamia College Road", "+919751190190"],
-  ["Hindustan Petroleum", "Bangalore Road", "+917601936945"],
-  ["Bharat Petroleum Petrol Pump", "Muslimpur", "+911800224344"],
-  ["Bharat Petroleum - N.S. Rajan", "Adjacent Bus Stand", "+911800224344"],
-  ["ADS Fuel Station", "Alangayam to Vaniyambadi Road", ""],
-  ["IndianOil", "Chettiyappanur, NH46", "+919443161812"],
-  ["IndianOil", "Khaderpet, Trunk Road", "+918778992329"],
-  ["IndianOil", "Satipur NH46", "+919952782133"],
-].map(([name, location, phone]) => ({
-  name,
+  ["Hindustan Petroleum Corporation Limited", "Islamia College Road Part A, Vaniyambadi", "+919751190190", "24 Hours"],
+  ["Hindustan Petroleum", "Ground Floor, Bangalore Road, Vaniyambadi", "+917601936945", "24 Hours"],
+  ["Bharat Petroleum Petrol Pump", "49 Shivan Street, Nadar Colony, Muslimpur", "+911800224344", ""],
+  ["Bharat Petroleum - N.S. Rajan", "Adjacent Bus Stand, Vaniyambadi", "+911800224344", ""],
+  ["ADS Fuel Station", "Alangayam to Vaniyambadi Road, Nethaji Nagar", "", ""],
+  ["IndianOil", "Chettiyappanur, NH46, Govindapuram", "+919443161812", ""],
+  ["IndianOil", "Khaderpet, Adhoc 152 Trunk Road", "+918778992329", ""],
+  ["IndianOil", "Satipur NH46, Chettiyappanur", "+919952782133", ""],
+].map((x, i) => ({
+  id: `petrol_${i}`,
   category: "petrol",
-  location: `${location}, Vaniyambadi`,
-  phone,
+  name: x[0],
+  location: x[1],
+  phone: x[2],
+  description: x[3],
 }));
 
+/* =========================
+   SHOPS
+========================= */
+
 const SHOPS = [
-  ["City Supermarket", "Muslimpur / Basheerabad", "9360716622"],
-  ["OAS Supermart", "Khaderpet", "7200455455"],
-  ["Seema Super Market", "Basheerabad", "9994489658"],
-  ["Sri Saravana Super Market", "Chettiyappanur", "9443686003"],
-  ["A2Z Mart Super Market", "Khaderpet", "7010016386"],
-  ["G M C Stores", "Neelfield", "9994267502"],
-  ["Sanjay Stores", "Khaderpet", "9787460896"],
-  ["M G General Store", "Cutchery Main Road", "7010807095"],
+  ["City Supermarket", "319 Malang Road, Muslimpur / Basheerabad", "9360716622"],
+  ["OAS Supermart", "475 Jinnah Road, Khaderpet", "7200455455"],
+  ["Seema Super Market", "61 Iqbal Road, Basheerabad", "9994489658"],
+  ["Sri Saravana Super Market", "Chettiyappanur / Kalendira", "9443686003"],
+  ["A2Z Mart Super Market", "Kaki Street / CL Road, Khaderpet", "7010016386"],
+  ["G M C Stores", "Mandi Street, Neelfield", "9994267502"],
+  ["Sanjay Stores", "CN Annadurai Road, Khaderpet", "9787460896"],
+  ["M G General Store", "1255 PJ Nehru Street, Cutchery Main Road", "7010807095"],
   ["Al Madina General Store", "Vaniyambadi", "9994033982"],
-  ["S M Salahuddin Store", "Shakirabad", "9042241977"],
-  ["Sama Store", "Muslimpur", "9366111536"],
-  ["Makka Store", "Jabrapath", ""],
+  ["S M Salahuddin Store", "Md Ali Bazaar Road, Shakirabad", "9042241977"],
+  ["Sama Store", "Periyar Nagar, Muslimpur", "9366111536"],
+  ["Makka Store", "High Road, Jabrapath", ""],
   ["Mani Departments", "Bus Stand", ""],
   ["Tindivanam Silks", "C.L. Road", ""],
   ["Seematti Silks", "C.L. Road", ""],
-].map(([name, location, phone]) => ({
-  name,
-  category: name.toLowerCase().includes("market") ? "supermarket" : "shop",
-  location: `${location}, Vaniyambadi`,
-  phone,
+].map((x, i) => ({
+  id: `shop_${i}`,
+  category: "shop",
+  name: x[0],
+  location: x[1],
+  phone: x[2],
 }));
 
+/* =========================
+   SALONS
+========================= */
+
 const SALONS = [
-  ["Naturals Salon", "Teachers Colony", "6383103066"],
-  ["Mahi Maa Beauty Parlour", "Pudur", "9150396088"],
-  ["Darpan Beauty Clinic & Parlour", "Amburpet", "9442059119"],
-  ["Pooja Beauty Parlour", "Jinnah Road", "8754892009"],
+  ["Naturals Salon", "30 CN Annadurai Road, Teachers Colony", "6383103066"],
+  ["Mahi Maa Beauty Parlour", "55 Kamarajar Street, Pudur", "9150396088"],
+  ["Darpan Beauty Clinic & Parlour", "Thippanarao Street, Amburpet", "9442059119"],
+  ["Pooja Beauty Parlour & Training Academy", "Municipality Complex, Jinnah Road", "8754892009"],
   ["Studio 27 Unisex Salon", "Vaniyambadi", ""],
   ["Shine Gents Hair Salon", "Vaniyambadi", ""],
   ["Nowmi Men Salon", "Vaniyambadi", ""],
   ["M M Beauty Parlour", "Vaniyambadi", ""],
   ["Royal Mens Beauty Saloon", "Vaniyambadi", ""],
-].map(([name, location, phone]) => ({
-  name,
+].map((x, i) => ({
+  id: `salon_${i}`,
   category: "salon",
-  location,
-  phone,
+  name: x[0],
+  location: x[1],
+  phone: x[2],
 }));
+
+/* =========================
+   TEMPLES
+========================= */
 
 const TEMPLES = [
   ["Sri Athitheeswara Swamy Temple", "Old Vaniyambadi", "9994107395"],
-  ["Sri Azhagu Perumal Temple", "D. Periyapettai", "9743955052"],
+  ["Sri Azhagu Perumal Temple", "Haji Street, D. Periyapettai", "9743955052"],
   ["Puthu Mariyamman Kovil", "New Town", ""],
-  ["Sri Ettiyamman Temple", "Old Vaniyambadi", ""],
+  ["Sri Ettiyamman Temple", "W Mada Street, Old Vaniyambadi", ""],
   ["Sri Vettuvanam Ellaiyamman Temple", "Old Vaniyambadi", ""],
-  ["Balamurugan Temple", "Valayambattu", ""],
+  ["Balamurugan Temple", "Vasantham Nagar / Valayambattu", ""],
   ["Sri Panduranga Rukmayi Temple", "Chennampet", ""],
   ["Vetkaliyamman Temple", "Konamedu", ""],
   ["Om Sakthi Temple", "C.L. Road", ""],
   ["Ponni Amman Koil", "Bazaar", ""],
   ["Lord Venkateswaran Temple", "Periyapet", ""],
-].map(([name, location, phone]) => ({
-  name,
+].map((x, i) => ({
+  id: `temple_${i}`,
   category: "temple",
-  location: `${location}, Vaniyambadi`,
-  phone,
+  name: x[0],
+  location: x[1],
+  phone: x[2],
 }));
+
+/* =========================
+   BANKS / ATM
+========================= */
 
 const BANKS = [
   "State Bank of India",
@@ -344,9 +459,10 @@ const BANKS = [
   "Indian Overseas Bank",
   "Karur Vysya Bank",
   "Axis Bank",
-].map((name) => ({
-  name,
+].map((name, i) => ({
+  id: `bank_${i}`,
   category: "bank",
+  name,
   location: "Vaniyambadi",
 }));
 
@@ -356,49 +472,87 @@ const ATMS = [
   "HDFC Bank ATM",
   "Axis Bank ATM",
   "City Union Bank ATM",
-].map((name) => ({
-  name,
+].map((name, i) => ({
+  id: `atm_${i}`,
   category: "atm",
+  name,
   location: "Vaniyambadi",
 }));
 
+/* =========================
+   EXTRA
+========================= */
+
 const EXTRA = [
-  ["Vaniyambadi Railway Station", "railway", "Vaniyambadi", "232308"],
-  ["Vaniyambadi - Bengaluru Highway", "highway", "NH48 / Bengaluru Road side", ""],
-  ["Vaniyambadi - Chennai Highway", "highway", "NH48 / Chennai direction", ""],
-  ["Today's Gold Rate", "gold", "Vaniyambadi", ""],
-  ["Vaniyambadi 360 Offers", "offers", "Vaniyambadi", ""],
-  ["Vaniyambadi 360 Reels", "reels", "Vaniyambadi", ""],
-].map(([name, category, location, phone]) => ({
-  name,
-  category,
-  location,
-  phone,
-}));
+  {
+    id: "railway_1",
+    category: "railway",
+    name: "Vaniyambadi Railway Station",
+    location: "Vaniyambadi",
+    phone: "232308",
+  },
+  {
+    id: "highway_1",
+    category: "highway",
+    name: "Vaniyambadi - Bengaluru Highway",
+    location: "NH48 / Bengaluru Road side",
+  },
+  {
+    id: "highway_2",
+    category: "highway",
+    name: "Vaniyambadi - Chennai Highway",
+    location: "NH48 / Chennai direction",
+  },
+  {
+    id: "gold_1",
+    category: "gold",
+    name: "Today's Gold Rate",
+    location: "Vaniyambadi",
+    description: "LIVE API PENDING",
+  },
+  {
+    id: "offers_1",
+    category: "offers",
+    name: "Vaniyambadi 360 Offers",
+    location: "Vaniyambadi",
+    description: "Admin can add offers.",
+  },
+];
+
+/* =========================
+   GOVERNMENT
+========================= */
 
 const GOVERNMENT = [
-  ["Aadhaar / UIDAI", "India", "1947"],
-  ["Tamil Nadu e-Sevai", "Tamil Nadu", "18004256000"],
-  ["Vaniyambadi Municipality", "Vaniyambadi", "04174235317"],
-  ["Vaniyambadi Taluk Office", "Vaniyambadi", "232184"],
-  ["Police Station", "Vaniyambadi", "232110"],
-  ["Fire Station", "Vaniyambadi", "224101"],
-  ["Railway Station", "Vaniyambadi", "232308"],
-  ["Government Hospital", "Vaniyambadi", "225700"],
-  ["Electricity Board", "Vaniyambadi", "224339"],
-  ["Municipal Office", "Vaniyambadi", "235317"],
-  ["Municipal Commissioner", "Vaniyambadi", "235408"],
-  ["Telephone Complaints", "India", "198"],
-  ["Passport Seva", "India", "18002581800"],
-  ["Voter / Election Commission", "India", "1950"],
-  ["Tamil Nadu Ration / TNPDS", "Tamil Nadu", "1967"],
-  ["Registration Department", "Tamil Nadu", "04174227222"],
-].map(([name, location, phone]) => ({
-  name,
+  ["Aadhaar / UIDAI", "India", "1947", "https://www.uidai.gov.in/"],
+  ["Tamil Nadu e-Sevai", "Tamil Nadu", "18004256000", "https://www.tnesevai.tn.gov.in/"],
+  ["Vaniyambadi Municipality", "Islamiah College Road, Vaniyambadi", "04174235317", "https://www.tnurbantree.tn.gov.in/vaniyambadi/"],
+  ["Vaniyambadi Taluk Office", "Vaniyambadi", "232184", "https://tirupathur.nic.in/"],
+  ["Police Station", "Vaniyambadi", "232110", ""],
+  ["Fire Station", "Vaniyambadi", "224101", ""],
+  ["Railway Station", "Vaniyambadi", "232308", ""],
+  ["Government Hospital", "Vaniyambadi", "225700", ""],
+  ["Electricity Board", "Vaniyambadi", "224339", ""],
+  ["Municipal Office", "Vaniyambadi", "235317", ""],
+  ["Municipal Commissioner", "Vaniyambadi", "235408", ""],
+  ["Telephone Complaints", "India", "198", ""],
+  ["Passport Seva", "India", "18002581800", "https://www.passportindia.gov.in/"],
+  ["Voter / Election Commission", "India", "1950", "https://voters.eci.gov.in/"],
+  ["Tamil Nadu Ration / TNPDS", "Tamil Nadu", "1967", "https://www.tnpds.gov.in/"],
+  ["Patta / Land e-Services", "Tamil Nadu", "", "https://eservices.tn.gov.in/"],
+  ["Registration Department", "Tamil Nadu", "04174227222", "https://tnreginet.gov.in/"],
+].map((x, i) => ({
+  id: `government_${i}`,
   category: "government",
-  location,
-  phone,
+  name: x[0],
+  location: x[1],
+  phone: x[2],
+  website: x[3],
 }));
+
+/* =========================
+   EMERGENCY
+========================= */
 
 const EMERGENCY = [
   ["Emergency / Unified", "India", "112"],
@@ -411,12 +565,17 @@ const EMERGENCY = [
   ["Disaster Control Room", "Tamil Nadu", "1077"],
   ["State Control Room", "Tamil Nadu", "1070"],
   ["Police WhatsApp", "Tirupattur District", "9092700100"],
-].map(([name, location, phone]) => ({
-  name,
+].map((x, i) => ({
+  id: `emergency_${i}`,
   category: "emergency",
-  location,
-  phone,
+  name: x[0],
+  location: x[1],
+  phone: x[2],
 }));
+
+/* =========================
+   INITIAL DATA
+========================= */
 
 const INITIAL_DATA = [
   ...LOCATIONS,
@@ -439,106 +598,39 @@ const INITIAL_DATA = [
   ...EMERGENCY,
 ];
 
-/* =========================================================
-   HELPERS
-========================================================= */
-
-function categoryInfo(id) {
-  return CATEGORIES.find((x) => x[0] === id);
-}
-
-function callNumber(phone) {
-  if (!phone) {
-    Alert.alert("Phone", "Number not available.");
-    return;
-  }
-
-  Linking.openURL(
-    `tel:${String(phone).replace(/[^\d+]/g, "")}`
-  );
-}
-
-function openWhatsApp(phone) {
-  if (!phone) {
-    Alert.alert("WhatsApp", "WhatsApp number not available.");
-    return;
-  }
-
-  let n = String(phone).replace(/[^\d]/g, "");
-
-  if (n.length === 10) n = "91" + n;
-  if (n.startsWith("0")) n = "91" + n.substring(1);
-
-  Linking.openURL(`https://wa.me/${n}`);
-}
-
-function openMap(item) {
-  const q = encodeURIComponent(
-    `${item.name} ${item.location} Vaniyambadi Tamil Nadu`
-  );
-
-  Linking.openURL(
-    `https://www.google.com/maps/search/?api=1&query=${q}`
-  );
-}
-
-/* =========================================================
-   PREMIUM ICON
-========================================================= */
-
-function PremiumIcon({ icon, size = 56 }) {
-  return (
-    <View
-      style={[
-        styles.iconCircle,
-        {
-          width: size,
-          height: size,
-          borderRadius: size / 2,
-        },
-      ]}
-    >
-      <Text style={{ fontSize: size * 0.45 }}>{icon}</Text>
-    </View>
-  );
-}
-
-/* =========================================================
-   HEADER
-========================================================= */
+/* =========================
+   UI COMPONENTS
+========================= */
 
 function Header({ onAdmin }) {
   return (
     <View style={styles.header}>
-      <View>
-        <Text style={styles.brand}>VANIYAMBADI 360</Text>
-        <Text style={styles.brand83}>VANIYAMBADI.83</Text>
-        <Text style={styles.tagline}>LOCAL, ALL AROUND</Text>
-      </View>
+      <View style={styles.brandRow}>
+        <View style={styles.logoCircle}>
+          <Text style={styles.logoText}>V</Text>
+        </View>
 
-      <TouchableOpacity
-        style={styles.adminSmall}
-        onPress={onAdmin}
-      >
-        <Text style={styles.adminSmallIcon}>⚙️</Text>
-        <Text style={styles.adminSmallText}>ADMIN</Text>
-      </TouchableOpacity>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.brandBig}>
+            VANIYAMBADI
+            <Text style={styles.brandBlue}>.83</Text>
+          </Text>
+
+          <Text style={styles.brandSmall}>LOCAL, ALL AROUND</Text>
+        </View>
+
+        <TouchableOpacity style={styles.adminMini} onPress={onAdmin}>
+          <Text style={styles.adminMiniText}>ADMIN</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
 
-/* =========================================================
-   ACTION BUTTON
-========================================================= */
-
-function ActionButton({ icon, title, onPress, type = "normal" }) {
+function ActionButton({ icon, title, onPress, secondary = false }) {
   return (
     <TouchableOpacity
-      style={[
-        styles.actionButton,
-        type === "danger" && styles.actionDanger,
-        type === "green" && styles.actionGreen,
-      ]}
+      style={[styles.actionButton, secondary && styles.actionSecondary]}
       onPress={onPress}
     >
       <Text style={styles.actionIcon}>{icon}</Text>
@@ -547,1173 +639,1148 @@ function ActionButton({ icon, title, onPress, type = "normal" }) {
   );
 }
 
-/* =========================================================
-   LISTING CARD
-========================================================= */
-
-function ListingCard({
-  item,
-  onAdminEdit,
-  favourite,
-  onFavourite,
-}) {
-  const info = categoryInfo(item.category);
+function ListingCard({ item, onEdit, onDelete, adminMode = false }) {
+  const cat = categoryInfo(item.category);
 
   return (
     <View style={styles.card}>
       <View style={styles.cardTop}>
-        <PremiumIcon
-          icon={info ? info[1] : "📌"}
-          size={54}
-        />
+        <View style={styles.cardIcon}>
+          <Text style={styles.cardIconText}>{cat ? cat.icon : "📌"}</Text>
+        </View>
 
-        <View style={{ flex: 1, marginLeft: 12 }}>
-          <View style={styles.nameRow}>
-            <Text style={styles.cardTitle}>
-              {item.name}
-            </Text>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.cardTitle}>{item.name}</Text>
 
-            <TouchableOpacity onPress={onFavourite}>
-              <Text style={styles.heart}>
-                {favourite ? "❤️" : "♡"}
-              </Text>
-            </TouchableOpacity>
-          </View>
+          {item.tamilName ? (
+            <Text style={styles.cardTamil}>{item.tamilName}</Text>
+          ) : null}
 
-          {item.verified && (
-            <Text style={styles.verified}>
-              ✓ VERIFIED
-            </Text>
-          )}
+          {item.location ? (
+            <Text style={styles.cardLocation}>📍 {item.location}</Text>
+          ) : null}
 
-          <Text style={styles.cardLocation}>
-            📍 {item.location}
-          </Text>
+          {item.description ? (
+            <Text style={styles.cardDescription}>{item.description}</Text>
+          ) : null}
         </View>
       </View>
 
-      {!!item.description && (
-        <Text style={styles.description}>
-          {item.description}
-        </Text>
-      )}
+      <View style={styles.cardButtons}>
+        {item.phone ? (
+          <TouchableOpacity
+            style={styles.smallButton}
+            onPress={() => callNumber(item.phone)}
+          >
+            <Text style={styles.smallButtonText}>📞 Call</Text>
+          </TouchableOpacity>
+        ) : null}
 
-      {!!item.hours && (
-        <Text style={styles.meta}>🕐 {item.hours}</Text>
-      )}
+        {item.phone ? (
+          <TouchableOpacity
+            style={styles.smallButton}
+            onPress={() => openWhatsApp(item.phone)}
+          >
+            <Text style={styles.smallButtonText}>💬 WhatsApp</Text>
+          </TouchableOpacity>
+        ) : null}
 
-      {!!item.rating && (
-        <Text style={styles.meta}>
-          ⭐ {item.rating} ({item.reviews || 0} reviews)
-        </Text>
-      )}
-
-      {!!item.offer && (
-        <View style={styles.offer}>
-          <Text style={styles.offerText}>
-            🎁 {item.offer}
-          </Text>
-        </View>
-      )}
-
-      <View style={styles.actions}>
-        {!!item.phone && (
-          <>
-            <ActionButton
-              icon="📞"
-              title="Call"
-              onPress={() => callNumber(item.phone)}
-              type="green"
-            />
-
-            <ActionButton
-              icon="💬"
-              title="WhatsApp"
-              onPress={() => openWhatsApp(item.phone)}
-              type="green"
-            />
-          </>
-        )}
-
-        <ActionButton
-          icon="📍"
-          title="Map"
+        <TouchableOpacity
+          style={styles.smallButton}
           onPress={() => openMap(item)}
-        />
+        >
+          <Text style={styles.smallButtonText}>🗺️ Map</Text>
+        </TouchableOpacity>
 
-        {onAdminEdit && (
-          <ActionButton
-            icon="✏️"
-            title="Edit"
-            onPress={onAdminEdit}
-          />
-        )}
+        {item.website ? (
+          <TouchableOpacity
+            style={styles.smallButton}
+            onPress={() => openWebsite(item.website)}
+          >
+            <Text style={styles.smallButtonText}>🌐 Open</Text>
+          </TouchableOpacity>
+        ) : null}
+
+        {adminMode ? (
+          <>
+            <TouchableOpacity
+              style={styles.editButton}
+              onPress={() => onEdit(item)}
+            >
+              <Text style={styles.editButtonText}>✏️ Edit</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.deleteButton}
+              onPress={() => onDelete(item)}
+            >
+              <Text style={styles.deleteButtonText}>🗑️ Delete</Text>
+            </TouchableOpacity>
+          </>
+        ) : null}
       </View>
     </View>
   );
 }
 
-/* =========================================================
-   HOME FEATURE CARD
-========================================================= */
-
-function FeatureCard({
-  icon,
-  title,
-  subtitle,
-  onPress,
-}) {
-  return (
-    <TouchableOpacity
-      style={styles.featureCard}
-      onPress={onPress}
-      activeOpacity={0.85}
-    >
-      <PremiumIcon icon={icon} size={58} />
-
-      <Text style={styles.featureTitle}>
-        {title}
-      </Text>
-
-      {!!subtitle && (
-        <Text style={styles.featureSubtitle}>
-          {subtitle}
-        </Text>
-      )}
-    </TouchableOpacity>
-  );
-}
-
-/* =========================================================
+/* =========================
    HOME
-========================================================= */
+========================= */
 
 function Home({
-  setCategory,
-  openEmergency,
-  openGovernment,
-  openAdmin,
-  openScreen,
-  member,
+  data,
+  onSearch,
+  onCategory,
+  onMember,
+  onOwner,
+  onPosts,
+  onReels,
+  onAdmin,
 }) {
+  const popular = data.filter(
+    (x) =>
+      ["hospital", "hotel", "shop", "petrol", "school"].includes(x.category)
+  );
+
   return (
     <ScrollView
-      style={styles.page}
-      contentContainerStyle={styles.pageContent}
+      style={styles.screen}
+      contentContainerStyle={styles.content}
       showsVerticalScrollIndicator={false}
     >
-      <Header onAdmin={openAdmin} />
+      <Header onAdmin={onAdmin} />
 
       <View style={styles.hero}>
-        <Text style={styles.heroSmall}>
-          VANIYAMBADI
-        </Text>
-
-        <Text style={styles.heroTitle}>
-          LOCAL, ALL AROUND
-        </Text>
-
+        <Text style={styles.heroTitle}>VANIYAMBADI</Text>
+        <Text style={styles.heroSub}>LOCAL, ALL AROUND</Text>
         <Text style={styles.heroTamil}>
-          வாணியம்பாடி — உங்கள் உள்ளூர் தகவல் மையம்
+          வாணியம்பாடி முழுவதும் ஒரே இடத்தில்
         </Text>
 
-        <View style={styles.freeBadge}>
-          <Text style={styles.freeText}>
-            ✓ PUBLIC ACCESS — FREE
-          </Text>
-        </View>
-      </View>
-
-      {/* MEMBER / OWNER */}
-
-      <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>
-          👤 Account & Business
-        </Text>
-      </View>
-
-      <View style={styles.twoColumns}>
-        <FeatureCard
-          icon="👤"
-          title="Member"
-          subtitle={
-            member
-              ? "My Profile"
-              : "Join / Login"
-          }
-          onPress={() => openScreen("member")}
-        />
-
-        <FeatureCard
-          icon="🏪"
-          title="Shop Owner"
-          subtitle="My Shop"
-          onPress={() => openScreen("owner")}
-        />
-      </View>
-
-      {/* CONTENT */}
-
-      <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>
-          ✨ Vaniyambadi Features
-        </Text>
-      </View>
-
-      <View style={styles.featureGrid}>
-        <FeatureCard
-          icon="🎬"
-          title="Reels"
-          subtitle="Short Videos"
-          onPress={() => openScreen("reels")}
-        />
-
-        <FeatureCard
-          icon="📷"
-          title="Photos"
-          subtitle="Local Photos"
-          onPress={() => openScreen("photos")}
-        />
-
-        <FeatureCard
-          icon="📝"
-          title="Posts"
-          subtitle="Create & Publish"
-          onPress={() => openScreen("posts")}
-        />
-
-        <FeatureCard
-          icon="🛒"
-          title="Shopping"
-          subtitle="Shops & Products"
-          onPress={() => setCategory("shop")}
-        />
-
-        <FeatureCard
-          icon="🏥"
-          title="Hospital"
-          subtitle="Hospitals"
-          onPress={() => setCategory("hospital")}
-        />
-
-        <FeatureCard
-          icon="🏫"
-          title="School"
-          subtitle="Schools"
-          onPress={() => setCategory("school")}
-        />
-
-        <FeatureCard
-          icon="⛽"
-          title="Petrol"
-          subtitle="Petrol Bunks"
-          onPress={() => setCategory("petrol")}
-        />
-
-        <FeatureCard
-          icon="🍴"
-          title="Hotels"
-          subtitle="Food & Stay"
-          onPress={() => setCategory("hotel")}
-        />
-      </View>
-
-      {/* SERVICES */}
-
-      <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>
-          📍 Local Services
-        </Text>
-      </View>
-
-      <View style={styles.featureGrid}>
-        <FeatureCard
-          icon="📍"
-          title="Locations"
-          subtitle="ஊர்கள்"
-          onPress={() => setCategory("locations")}
-        />
-
-        <FeatureCard
-          icon="📞"
-          title="Calls"
-          subtitle="Contact Shops"
-          onPress={() => setCategory("shop")}
-        />
-
-        <FeatureCard
-          icon="💬"
-          title="WhatsApp"
-          subtitle="Direct Contact"
-          onPress={() => setCategory("shop")}
-        />
-
-        <FeatureCard
-          icon="🏛️"
-          title="Government"
-          subtitle="Government Help"
-          onPress={openGovernment}
-        />
-      </View>
-
-      {/* EMERGENCY */}
-
-      <TouchableOpacity
-        style={styles.emergencyBox}
-        onPress={openEmergency}
-      >
-        <PremiumIcon icon="🚨" size={62} />
-
-        <View style={{ flex: 1, marginLeft: 14 }}>
-          <Text style={styles.emergencyTitle}>
-            Emergency Help
-          </Text>
-
-          <Text style={styles.emergencySub}>
-            Hospital • Police • Ambulance • Fire
-          </Text>
-
-          <Text style={styles.emergencyTamil}>
-            அவசர உதவி எண்கள்
-          </Text>
-        </View>
-
-        <Text style={styles.arrow}>›</Text>
-      </TouchableOpacity>
-
-      {/* ADMIN */}
-
-      <View style={styles.adminPanelPreview}>
-        <Text style={styles.adminPreviewTitle}>
-          ⚙️ ADMIN CONTROL
-        </Text>
-
-        <Text style={styles.adminPreviewText}>
-          Add • Edit • Delete • Categories • Shops •
-          Members • Owners • Posts • Photos • Reels
-        </Text>
-
-        <TouchableOpacity
-          style={styles.adminOpenButton}
-          onPress={openAdmin}
-        >
-          <Text style={styles.adminOpenText}>
-            Open Admin Control →
+        <TouchableOpacity style={styles.searchBox} onPress={onSearch}>
+          <Text style={styles.searchIcon}>🔎</Text>
+          <Text style={styles.searchPlaceholder}>
+            எதை தேடுகிறீர்கள்?
           </Text>
         </TouchableOpacity>
       </View>
 
-      {/* MEMBERSHIP */}
+      <Text style={styles.sectionTitle}>Quick Access</Text>
 
-      <TouchableOpacity
-        style={styles.membershipBanner}
-        onPress={() => openScreen("membership")}
-      >
-        <Text style={styles.membershipIcon}>💎</Text>
+      <View style={styles.quickGrid}>
+        <ActionButton
+          icon="🚨"
+          title="Emergency"
+          onPress={() => onCategory("emergency")}
+        />
+        <ActionButton
+          icon="🏥"
+          title="Hospitals"
+          onPress={() => onCategory("hospital")}
+        />
+        <ActionButton
+          icon="🏫"
+          title="Schools"
+          onPress={() => onCategory("school")}
+        />
+        <ActionButton
+          icon="⛽"
+          title="Petrol"
+          onPress={() => onCategory("petrol")}
+        />
+        <ActionButton
+          icon="🍴"
+          title="Hotels"
+          onPress={() => onCategory("hotel")}
+        />
+        <ActionButton
+          icon="📍"
+          title="Locations"
+          onPress={() => onCategory("locations")}
+        />
+        <ActionButton
+          icon="🎬"
+          title="Reels"
+          onPress={onReels}
+        />
+        <ActionButton
+          icon="🎁"
+          title="Offers"
+          onPress={() => onCategory("offers")}
+        />
+      </View>
 
+      <Text style={styles.sectionTitle}>Vaniyambadi 360</Text>
+
+      <View style={styles.featureCard}>
+        <Text style={styles.featureIcon}>📱</Text>
         <View style={{ flex: 1 }}>
-          <Text style={styles.membershipTitle}>
-            SHOP OWNER MEMBERSHIP
+          <Text style={styles.featureTitle}>
+            Local, All Around
           </Text>
-
-          <Text style={styles.membershipPrice}>
-            ₹300 / MONTH
-          </Text>
-
-          <Text style={styles.membershipSub}>
-            Photos • Posts • Reels • Shop Control
+          <Text style={styles.featureText}>
+            Shops, hospitals, schools, hotels, petrol bunks,
+            services, locations and more.
           </Text>
         </View>
-
-        <Text style={styles.arrow}>›</Text>
-      </TouchableOpacity>
-
-      {/* OLD CATEGORY GRID */}
-
-      <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>
-          📚 Explore Categories
-        </Text>
       </View>
 
-      <View style={styles.categoryGrid}>
-        {CATEGORIES
-          .filter(
-            (x) =>
-              ![
-                "all",
-                "government",
-                "emergency",
-              ].includes(x[0])
-          )
-          .map((c) => (
-            <TouchableOpacity
-              key={c[0]}
-              style={styles.categoryBox}
-              onPress={() => setCategory(c[0])}
-            >
-              <PremiumIcon icon={c[1]} size={48} />
+      <Text style={styles.sectionTitle}>Member Area</Text>
 
-              <Text style={styles.categoryText}>
-                {c[2]}
-              </Text>
-            </TouchableOpacity>
-          ))}
+      <View style={styles.memberGrid}>
+        <TouchableOpacity style={styles.memberCard} onPress={onMember}>
+          <Text style={styles.memberIcon}>👤</Text>
+          <Text style={styles.memberTitle}>Member</Text>
+          <Text style={styles.memberText}>Join / Login</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.memberCard} onPress={onOwner}>
+          <Text style={styles.memberIcon}>🏪</Text>
+          <Text style={styles.memberTitle}>Shop Owner</Text>
+          <Text style={styles.memberText}>Owner Control</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.memberCard} onPress={onPosts}>
+          <Text style={styles.memberIcon}>📸</Text>
+          <Text style={styles.memberTitle}>Posts</Text>
+          <Text style={styles.memberText}>Photos & Updates</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.memberCard} onPress={onReels}>
+          <Text style={styles.memberIcon}>🎬</Text>
+          <Text style={styles.memberTitle}>Reels</Text>
+          <Text style={styles.memberText}>Short Videos</Text>
+        </TouchableOpacity>
       </View>
 
-      <View style={styles.footer}>
-        <Text style={styles.footerBrand}>
-          VANIYAMBADI 360
-        </Text>
+      <Text style={styles.sectionTitle}>Popular</Text>
 
-        <Text style={styles.footerText}>
-          VANIYAMBADI.83 • LOCAL, ALL AROUND
-        </Text>
-      </View>
+      {popular.slice(0, 8).map((item) => (
+        <ListingCard key={item.id} item={item} />
+      ))}
     </ScrollView>
   );
 }
 
-/* =========================================================
+/* =========================
    DIRECTORY
-========================================================= */
+========================= */
 
-function Directory({
-  data,
-  category,
-  setCategory,
-  search,
-  setSearch,
-  favourites,
-  toggleFavourite,
-  admin,
-  openEdit,
-}) {
+function Directory({ data, initialCategory = "all", onBack }) {
+  const [category, setCategory] = useState(initialCategory);
+  const [query, setQuery] = useState("");
+
   const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase();
+    const q = query.trim().toLowerCase();
 
     return data.filter((item) => {
       const categoryMatch =
-        category === "all" ||
-        item.category === category;
+        category === "all" || item.category === category;
 
       if (!categoryMatch) return false;
 
       if (!q) return true;
 
       return (
-        String(item.name || "")
-          .toLowerCase()
-          .includes(q) ||
-        String(item.location || "")
-          .toLowerCase()
-          .includes(q) ||
-        String(item.description || "")
-          .toLowerCase()
-          .includes(q)
+        String(item.name || "").toLowerCase().includes(q) ||
+        String(item.location || "").toLowerCase().includes(q) ||
+        String(item.tamilName || "").toLowerCase().includes(q) ||
+        String(item.description || "").toLowerCase().includes(q)
       );
     });
-  }, [data, category, search]);
+  }, [data, category, query]);
 
   return (
-    <ScrollView
-      style={styles.page}
-      contentContainerStyle={styles.pageContent}
-    >
-      <Text style={styles.screenTitle}>
-        🔎 Search Directory
-      </Text>
+    <View style={styles.screen}>
+      <View style={styles.topBar}>
+        <TouchableOpacity onPress={onBack} style={styles.backBtn}>
+          <Text style={styles.backText}>‹</Text>
+        </TouchableOpacity>
 
-      <Text style={styles.screenSub}>
-        {filtered.length} results
-      </Text>
+        <Text style={styles.topTitle}>VANIYAMBADI 360</Text>
+      </View>
 
-      <TextInput
-        value={search}
-        onChangeText={setSearch}
-        placeholder="எதை தேடுகிறீர்கள்?"
-        placeholderTextColor="#94a3b8"
-        style={styles.searchInput}
-      />
+      <View style={styles.directorySearch}>
+        <Text style={{ fontSize: 18 }}>🔎</Text>
+        <TextInput
+          value={query}
+          onChangeText={setQuery}
+          placeholder="எதை தேடுகிறீர்கள்?"
+          placeholderTextColor="#94a3b8"
+          style={styles.directoryInput}
+        />
+      </View>
 
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        style={{ marginBottom: 14 }}
+        contentContainerStyle={styles.categoryRow}
       >
-        {CATEGORIES.map((c) => (
+        {CATEGORIES.map((cat) => (
           <TouchableOpacity
-            key={c[0]}
+            key={cat.id}
             style={[
-              styles.chip,
-              category === c[0] && styles.chipActive,
+              styles.categoryChip,
+              category === cat.id && styles.categoryChipActive,
             ]}
-            onPress={() => setCategory(c[0])}
+            onPress={() => setCategory(cat.id)}
           >
-            <Text style={styles.chipIcon}>
-              {c[1]}
-            </Text>
-
+            <Text style={styles.categoryChipIcon}>{cat.icon}</Text>
             <Text
               style={[
-                styles.chipText,
-                category === c[0] &&
-                  styles.chipTextActive,
+                styles.categoryChipText,
+                category === cat.id && styles.categoryChipTextActive,
               ]}
             >
-              {c[2]}
+              {cat.name}
             </Text>
           </TouchableOpacity>
         ))}
       </ScrollView>
 
-      {filtered.map((item, index) => (
+      <Text style={styles.resultText}>
+        {filtered.length} results
+      </Text>
+
+      <ScrollView
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+      >
+        {filtered.map((item) => (
+          <ListingCard key={item.id} item={item} />
+        ))}
+
+        {filtered.length === 0 ? (
+          <View style={styles.emptyBox}>
+            <Text style={styles.emptyIcon}>🔎</Text>
+            <Text style={styles.emptyTitle}>No result found</Text>
+            <Text style={styles.emptyText}>
+              வேறு பெயர் அல்லது category search செய்யுங்கள்.
+            </Text>
+          </View>
+        ) : null}
+      </ScrollView>
+    </View>
+  );
+}
+
+/* =========================
+   EMERGENCY
+========================= */
+
+function EmergencyScreen({ onBack }) {
+  return (
+    <ScrollView
+      style={styles.screen}
+      contentContainerStyle={styles.content}
+    >
+      <View style={styles.topBar}>
+        <TouchableOpacity onPress={onBack} style={styles.backBtn}>
+          <Text style={styles.backText}>‹</Text>
+        </TouchableOpacity>
+        <Text style={styles.topTitle}>🚨 Emergency Help</Text>
+      </View>
+
+      <View style={styles.emergencyHero}>
+        <Text style={styles.emergencyHeroIcon}>🚨</Text>
+        <Text style={styles.emergencyHeroTitle}>
+          Emergency Help
+        </Text>
+        <Text style={styles.emergencyHeroText}>
+          அவசர நேரத்தில் தேவையான எண்ணை உடனடியாக அழைக்கவும்.
+        </Text>
+      </View>
+
+      {EMERGENCY.map((item) => (
+        <View key={item.id} style={styles.emergencyCard}>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.emergencyTitle}>{item.name}</Text>
+            <Text style={styles.emergencyLocation}>
+              📍 {item.location}
+            </Text>
+            <Text style={styles.emergencyNumber}>
+              {item.phone}
+            </Text>
+          </View>
+
+          <TouchableOpacity
+            style={styles.callEmergency}
+            onPress={() => callNumber(item.phone)}
+          >
+            <Text style={styles.callEmergencyText}>📞</Text>
+          </TouchableOpacity>
+        </View>
+      ))}
+    </ScrollView>
+  );
+}
+
+/* =========================
+   GOVERNMENT
+========================= */
+
+function GovernmentScreen({ onBack }) {
+  return (
+    <ScrollView
+      style={styles.screen}
+      contentContainerStyle={styles.content}
+    >
+      <View style={styles.topBar}>
+        <TouchableOpacity onPress={onBack} style={styles.backBtn}>
+          <Text style={styles.backText}>‹</Text>
+        </TouchableOpacity>
+        <Text style={styles.topTitle}>🏛️ Government</Text>
+      </View>
+
+      {GOVERNMENT.map((item) => (
         <ListingCard
-          key={`${item.name}-${index}`}
+          key={item.id}
           item={item}
-          favourite={!!favourites[item.name]}
-          onFavourite={() =>
-            toggleFavourite(item.name)
-          }
-          onAdminEdit={
-            admin
-              ? () => openEdit(item, index)
-              : undefined
-          }
         />
       ))}
     </ScrollView>
   );
 }
 
-/* =========================================================
-   MEMBER AUTH
-========================================================= */
+/* =========================
+   MEMBER
+========================= */
 
-function MemberAuth({ onSuccess, onCancel }) {
+function MemberScreen({ onBack }) {
   const [mode, setMode] = useState("join");
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
-  const [area, setArea] = useState("");
-  const [password, setPassword] = useState("");
 
   function submit() {
-    if (!phone.trim() || !password.trim()) {
-      Alert.alert(
-        "Member",
-        "Mobile மற்றும் Password உள்ளிடவும்."
-      );
-      return;
-    }
-
-    if (mode === "join" && !name.trim()) {
-      Alert.alert("Member", "Name தேவை.");
+    if (!name.trim() || !phone.trim()) {
+      Alert.alert("Member", "Name and phone number enter செய்யுங்கள்.");
       return;
     }
 
     Alert.alert(
-      mode === "join" ? "Welcome 🎉" : "Login",
-      "Prototype account successful.",
-      [
-        {
-          text: "Continue",
-          onPress: () =>
-            onSuccess({
-              name:
-                name.trim() || "Member",
-              phone: phone.trim(),
-              area:
-                area.trim() || "Vaniyambadi",
-            }),
-        },
-      ]
+      "Member",
+      mode === "join"
+        ? "Member registration prototype completed."
+        : "Member login prototype completed."
     );
   }
 
   return (
-    <SafeAreaView style={styles.safe}>
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={
-          Platform.OS === "ios"
-            ? "padding"
-            : undefined
-        }
-      >
-        <ScrollView
-          contentContainerStyle={styles.authPage}
-        >
-          <TouchableOpacity onPress={onCancel}>
-            <Text style={styles.back}>‹ Back</Text>
+    <ScrollView
+      style={styles.screen}
+      contentContainerStyle={styles.content}
+    >
+      <View style={styles.topBar}>
+        <TouchableOpacity onPress={onBack} style={styles.backBtn}>
+          <Text style={styles.backText}>‹</Text>
+        </TouchableOpacity>
+        <Text style={styles.topTitle}>👤 Member</Text>
+      </View>
+
+      <View style={styles.panelCard}>
+        <Text style={styles.panelTitle}>Member Area</Text>
+
+        <View style={styles.segment}>
+          <TouchableOpacity
+            style={[
+              styles.segmentButton,
+              mode === "join" && styles.segmentActive,
+            ]}
+            onPress={() => setMode("join")}
+          >
+            <Text style={styles.segmentText}>Join</Text>
           </TouchableOpacity>
 
-          <PremiumIcon icon="👤" size={88} />
+          <TouchableOpacity
+            style={[
+              styles.segmentButton,
+              mode === "login" && styles.segmentActive,
+            ]}
+            onPress={() => setMode("login")}
+          >
+            <Text style={styles.segmentText}>Login</Text>
+          </TouchableOpacity>
+        </View>
 
-          <Text style={styles.authTitle}>
-            VANIYAMBADI 360
+        <Input
+          label="Name"
+          value={name}
+          onChangeText={setName}
+          placeholder="Your name"
+        />
+
+        <Input
+          label="Phone"
+          value={phone}
+          onChangeText={setPhone}
+          placeholder="Phone number"
+          keyboardType="phone-pad"
+        />
+
+        <TouchableOpacity
+          style={styles.primaryButton}
+          onPress={submit}
+        >
+          <Text style={styles.primaryButtonText}>
+            {mode === "join" ? "Join Member" : "Login"}
+          </Text>
+        </TouchableOpacity>
+      </View>
+    </ScrollView>
+  );
+}
+
+/* =========================
+   SHOP OWNER
+========================= */
+
+function ShopOwnerScreen({ onBack, onMembership }) {
+  const [logged, setLogged] = useState(false);
+  const [mode, setMode] = useState("login");
+
+  const [shopName, setShopName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [location, setLocation] = useState("");
+
+  const [downloadEnabled, setDownloadEnabled] = useState(true);
+  const [whatsappEnabled, setWhatsappEnabled] = useState(true);
+
+  function submitLogin() {
+    setLogged(true);
+  }
+
+  if (!logged) {
+    return (
+      <ScrollView
+        style={styles.screen}
+        contentContainerStyle={styles.content}
+      >
+        <View style={styles.topBar}>
+          <TouchableOpacity onPress={onBack} style={styles.backBtn}>
+            <Text style={styles.backText}>‹</Text>
+          </TouchableOpacity>
+
+          <Text style={styles.topTitle}>🏪 Shop Owner</Text>
+        </View>
+
+        <View style={styles.panelCard}>
+          <Text style={styles.panelTitle}>
+            Shop Owner Control
           </Text>
 
-          <Text style={styles.authSub}>
-            {mode === "join"
-              ? "Join as Member"
-              : "Member Login"}
+          <Text style={styles.panelText}>
+            Shop owner login / join prototype.
           </Text>
 
-          {mode === "join" && (
-            <>
-              <Input
-                label="Full Name"
-                value={name}
-                onChange={setName}
-                placeholder="உங்கள் பெயர்"
-              />
+          <View style={styles.segment}>
+            <TouchableOpacity
+              style={[
+                styles.segmentButton,
+                mode === "login" && styles.segmentActive,
+              ]}
+              onPress={() => setMode("login")}
+            >
+              <Text style={styles.segmentText}>Login</Text>
+            </TouchableOpacity>
 
-              <Input
-                label="Area / ஊர்"
-                value={area}
-                onChange={setArea}
-                placeholder="Vaniyambadi"
-              />
-            </>
-          )}
+            <TouchableOpacity
+              style={[
+                styles.segmentButton,
+                mode === "join" && styles.segmentActive,
+              ]}
+              onPress={() => setMode("join")}
+            >
+              <Text style={styles.segmentText}>Join</Text>
+            </TouchableOpacity>
+          </View>
 
           <Input
-            label="Mobile Number"
-            value={phone}
-            onChange={setPhone}
-            placeholder="Mobile Number"
-            keyboardType="phone-pad"
+            label="Shop Name"
+            value={shopName}
+            onChangeText={setShopName}
+            placeholder="Shop name"
           />
 
           <Input
-            label="Password"
-            value={password}
-            onChange={setPassword}
-            placeholder="Password"
+            label="Phone"
+            value={phone}
+            onChangeText={setPhone}
+            placeholder="Phone number"
+            keyboardType="phone-pad"
           />
 
           <TouchableOpacity
             style={styles.primaryButton}
-            onPress={submit}
+            onPress={submitLogin}
           >
             <Text style={styles.primaryButtonText}>
-              {mode === "join"
-                ? "👤 Create Member Account"
-                : "🔐 Login"}
+              {mode === "login" ? "Login" : "Create Owner Account"}
             </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.switchButton}
-            onPress={() =>
-              setMode(
-                mode === "join"
-                  ? "login"
-                  : "join"
-              )
-            }
+            style={styles.secondaryButton}
+            onPress={onMembership}
           >
-            <Text style={styles.switchText}>
-              {mode === "join"
-                ? "Already a Member? Login"
-                : "New Member? Join Now"}
+            <Text style={styles.secondaryButtonText}>
+              💳 Membership ₹{MEMBERSHIP_PRICE}/month
             </Text>
           </TouchableOpacity>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
-  );
-}
-
-/* =========================================================
-   SHOP OWNER
-========================================================= */
-
-function ShopOwner({ onBack, openScreen }) {
-  const [shopName, setShopName] = useState(
-    "My Shop"
-  );
-
-  return (
-    <ScrollView
-      style={styles.page}
-      contentContainerStyle={styles.pageContent}
-    >
-      <BackButton onPress={onBack} />
-
-      <View style={styles.ownerHero}>
-        <PremiumIcon icon="🏪" size={80} />
-
-        <Text style={styles.ownerTitle}>
-          SHOP OWNER CONTROL
-        </Text>
-
-        <Text style={styles.ownerSub}>
-          My Shop • Manage your business
-        </Text>
-      </View>
-
-      <View style={styles.ownerStatus}>
-        <Text style={styles.statusTitle}>
-          💎 Membership
-        </Text>
-
-        <Text style={styles.statusValue}>
-          ₹300 / Month
-        </Text>
-
-        <Text style={styles.statusText}>
-          Prototype membership status
-        </Text>
-
-        <TouchableOpacity
-          style={styles.smallButton}
-          onPress={() =>
-            openScreen("membership")
-          }
-        >
-          <Text style={styles.smallButtonText}>
-            Manage Membership
-          </Text>
-        </TouchableOpacity>
-      </View>
-
-      <Text style={styles.sectionTitle}>
-        🏪 My Shop
-      </Text>
-
-      <Input
-        label="Shop Name"
-        value={shopName}
-        onChange={setShopName}
-        placeholder="Shop Name"
-      />
-
-      <View style={styles.ownerGrid}>
-        <FeatureCard
-          icon="📷"
-          title="Photos"
-          subtitle="Edit Photos"
-          onPress={() => openScreen("photos")}
-        />
-
-        <FeatureCard
-          icon="📝"
-          title="Posts"
-          subtitle="Create Post"
-          onPress={() => openScreen("createPost")}
-        />
-
-        <FeatureCard
-          icon="🎬"
-          title="Reels"
-          subtitle="Upload Reel"
-          onPress={() => openScreen("reels")}
-        />
-
-        <FeatureCard
-          icon="🛒"
-          title="Products"
-          subtitle="My Products"
-          onPress={() => openScreen("products")}
-        />
-      </View>
-
-      <View style={styles.settingsBox}>
-        <Text style={styles.settingsTitle}>
-          ⚙️ Shop Owner Settings
-        </Text>
-
-        <Text style={styles.settingRow}>
-          📥 Download: ON / OFF
-        </Text>
-
-        <Text style={styles.settingRow}>
-          💬 WhatsApp Display: ON / OFF
-        </Text>
-
-        <Text style={styles.settingRow}>
-          📞 Contact Number
-        </Text>
-
-        <Text style={styles.settingRow}>
-          📍 Shop Location
-        </Text>
-
-        <Text style={styles.settingRow}>
-          🖼️ Shop Photos
-        </Text>
-      </View>
-    </ScrollView>
-  );
-}
-
-/* =========================================================
-   POSTS / PHOTOS / REELS
-========================================================= */
-
-function ContentScreen({
-  type,
-  posts,
-  onBack,
-  onCreate,
-}) {
-  const title =
-    type === "reels"
-      ? "🎬 Reels"
-      : type === "photos"
-      ? "📷 Photos"
-      : "📝 Posts";
-
-  return (
-    <ScrollView
-      style={styles.page}
-      contentContainerStyle={styles.pageContent}
-    >
-      <BackButton onPress={onBack} />
-
-      <View style={styles.contentHero}>
-        <PremiumIcon
-          icon={
-            type === "reels"
-              ? "🎬"
-              : type === "photos"
-              ? "📷"
-              : "📝"
-          }
-          size={76}
-        />
-
-        <Text style={styles.screenTitle}>
-          {title}
-        </Text>
-
-        <Text style={styles.screenSub}>
-          VANIYAMBADI.83
-        </Text>
-      </View>
-
-      <TouchableOpacity
-        style={styles.createButton}
-        onPress={onCreate}
-      >
-        <Text style={styles.createButtonText}>
-          ＋ Create New
-        </Text>
-      </TouchableOpacity>
-
-      {posts
-        .filter((p) =>
-          type === "posts"
-            ? p.type === "post"
-            : p.type === type
-        )
-        .map((p) => (
-          <View
-            key={p.id}
-            style={styles.postCard}
-          >
-            <Text style={styles.postType}>
-              {p.type === "reel"
-                ? "🎬 REEL"
-                : p.type === "photo"
-                ? "📷 PHOTO"
-                : "📝 POST"}
-            </Text>
-
-            <Text style={styles.postTitle}>
-              {p.title}
-            </Text>
-
-            {!!p.body && (
-              <Text style={styles.postBody}>
-                {p.body}
-              </Text>
-            )}
-
-            {!!p.image && (
-              <View style={styles.imagePreview}>
-                <Text style={styles.imagePreviewText}>
-                  🖼️ IMAGE
-                </Text>
-
-                <Text style={styles.imageUrl}>
-                  {p.image}
-                </Text>
-              </View>
-            )}
-
-            <Text style={styles.postLocation}>
-              📍 {p.location || "Vaniyambadi"}
-            </Text>
-          </View>
-        ))}
-
-      {posts.length === 0 && (
-        <View style={styles.empty}>
-          <Text style={styles.emptyIcon}>✨</Text>
-          <Text style={styles.emptyTitle}>
-            Nothing published yet
-          </Text>
-          <Text style={styles.emptyText}>
-            Create your first post, photo or reel.
-          </Text>
         </View>
-      )}
-    </ScrollView>
-  );
-}
-
-/* =========================================================
-   CREATE POST
-========================================================= */
-
-function CreatePost({
-  onBack,
-  onPublish,
-  defaultType = "post",
-}) {
-  const [type, setType] = useState(defaultType);
-  const [title, setTitle] = useState("");
-  const [body, setBody] = useState("");
-  const [image, setImage] = useState("");
-  const [location, setLocation] = useState(
-    "Vaniyambadi"
-  );
-
-  function publish() {
-    if (!title.trim()) {
-      Alert.alert(
-        "Publish",
-        "Title தேவை."
-      );
-      return;
-    }
-
-    onPublish({
-      id: Date.now(),
-      type,
-      title: title.trim(),
-      body: body.trim(),
-      image: image.trim(),
-      location: location.trim(),
-    });
-
-    Alert.alert(
-      "Published 🎉",
-      "Your content has been published."
+      </ScrollView>
     );
   }
 
   return (
     <ScrollView
-      style={styles.page}
-      contentContainerStyle={styles.pageContent}
+      style={styles.screen}
+      contentContainerStyle={styles.content}
     >
-      <BackButton onPress={onBack} />
+      <View style={styles.topBar}>
+        <TouchableOpacity onPress={onBack} style={styles.backBtn}>
+          <Text style={styles.backText}>‹</Text>
+        </TouchableOpacity>
 
-      <Text style={styles.screenTitle}>
-        ＋ Create Content
-      </Text>
-
-      <Text style={styles.screenSub}>
-        Post • Photo • Reel
-      </Text>
-
-      <View style={styles.typeRow}>
-        {[
-          ["post", "📝 Post"],
-          ["photo", "📷 Photo"],
-          ["reel", "🎬 Reel"],
-        ].map(([value, label]) => (
-          <TouchableOpacity
-            key={value}
-            style={[
-              styles.typeButton,
-              type === value &&
-                styles.typeButtonActive,
-            ]}
-            onPress={() => setType(value)}
-          >
-            <Text
-              style={[
-                styles.typeButtonText,
-                type === value &&
-                  styles.typeButtonTextActive,
-              ]}
-            >
-              {label}
-            </Text>
-          </TouchableOpacity>
-        ))}
+        <Text style={styles.topTitle}>🏪 My Shop</Text>
       </View>
 
-      <Input
-        label="Title"
-        value={title}
-        onChange={setTitle}
-        placeholder="Post title"
-      />
-
-      <Input
-        label="Description"
-        value={body}
-        onChange={setBody}
-        placeholder="Write something..."
-        multiline
-      />
-
-      <Input
-        label="Image / Video URL"
-        value={image}
-        onChange={setImage}
-        placeholder="Paste image or video link"
-      />
-
-      <Input
-        label="Location"
-        value={location}
-        onChange={setLocation}
-        placeholder="Vaniyambadi"
-      />
-
-      <TouchableOpacity
-        style={styles.primaryButton}
-        onPress={publish}
-      >
-        <Text style={styles.primaryButtonText}>
-          🚀 Publish Now
-        </Text>
-      </TouchableOpacity>
-
-      <Text style={styles.prototypeNote}>
-        Prototype: actual image/video storage can be
-        connected later with backend storage.
-      </Text>
-    </ScrollView>
-  );
-}
-
-/* =========================================================
-   MEMBERSHIP
-========================================================= */
-
-function Membership({ onBack }) {
-  return (
-    <ScrollView
-      style={styles.page}
-      contentContainerStyle={styles.pageContent}
-    >
-      <BackButton onPress={onBack} />
-
-      <View style={styles.membershipPage}>
-        <PremiumIcon icon="💎" size={92} />
-
-        <Text style={styles.membershipBig}>
-          SHOP OWNER
+      <View style={styles.panelCard}>
+        <Text style={styles.panelTitle}>
+          Shop Owner Dashboard
         </Text>
 
-        <Text style={styles.membershipBig}>
-          MEMBERSHIP
+        <Text style={styles.ownerBadge}>
+          OWNER CONTROL
         </Text>
 
-        <Text style={styles.priceBig}>
-          ₹300
+        <Input
+          label="Shop Name"
+          value={shopName}
+          onChangeText={setShopName}
+          placeholder="Shop name"
+        />
+
+        <Input
+          label="Phone"
+          value={phone}
+          onChangeText={setPhone}
+          placeholder="Phone"
+          keyboardType="phone-pad"
+        />
+
+        <Input
+          label="Location"
+          value={location}
+          onChangeText={setLocation}
+          placeholder="Shop location"
+        />
+
+        <Text style={styles.settingsTitle}>
+          Shop Settings
         </Text>
 
-        <Text style={styles.monthText}>
-          PER MONTH
-        </Text>
+        <ToggleRow
+          title="Reel Download"
+          value={downloadEnabled}
+          onChange={setDownloadEnabled}
+        />
 
-        {[
-          "🏪 Shop Profile",
-          "📷 Photos",
-          "📝 Posts",
-          "🎬 Reels",
-          "🛒 Products",
-          "📍 Location",
-          "📞 Call",
-          "💬 WhatsApp",
-          "⚙️ Owner Settings",
-        ].map((x) => (
-          <View
-            key={x}
-            style={styles.benefit}
-          >
-            <Text style={styles.benefitText}>
-              ✓ {x}
-            </Text>
-          </View>
-        ))}
+        <ToggleRow
+          title="Show WhatsApp in Reel"
+          value={whatsappEnabled}
+          onChange={setWhatsappEnabled}
+        />
 
         <TouchableOpacity
-          style={styles.upiButton}
+          style={styles.primaryButton}
           onPress={() =>
             Alert.alert(
-              "Payment",
-              "UPI / GPay integration will be connected here."
+              "Shop Owner",
+              "Shop details saved in prototype."
             )
           }
         >
-          <Text style={styles.upiText}>
-            💳 Pay ₹300 via UPI / GPay
+          <Text style={styles.primaryButtonText}>
+            💾 Save Shop
           </Text>
         </TouchableOpacity>
 
-        <Text style={styles.prototypeNote}>
-          Payment is UI-only in this prototype.
+        <TouchableOpacity
+          style={styles.uploadButton}
+          onPress={() =>
+            Alert.alert(
+              "Reels",
+              "Owner reel upload prototype. Admin approval is not required."
+            )
+          }
+        >
+          <Text style={styles.uploadButtonText}>
+            🎬 Upload Reel
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.uploadButton}
+          onPress={() =>
+            Alert.alert("Posts", "Photo upload prototype.")
+          }
+        >
+          <Text style={styles.uploadButtonText}>
+            📸 Upload Photo
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.secondaryButton}
+          onPress={onMembership}
+        >
+          <Text style={styles.secondaryButtonText}>
+            ₹{MEMBERSHIP_PRICE}/month Membership
+          </Text>
+        </TouchableOpacity>
+      </View>
+    </ScrollView>
+  );
+}
+
+/* =========================
+   TOGGLE
+========================= */
+
+function ToggleRow({ title, value, onChange }) {
+  return (
+    <View style={styles.toggleRow}>
+      <Text style={styles.toggleTitle}>{title}</Text>
+
+      <TouchableOpacity
+        style={[
+          styles.toggle,
+          value && styles.toggleOn,
+        ]}
+        onPress={() => onChange(!value)}
+      >
+        <View
+          style={[
+            styles.toggleCircle,
+            value && styles.toggleCircleOn,
+          ]}
+        />
+      </TouchableOpacity>
+    </View>
+  );
+}
+
+/* =========================
+   POSTS / REELS
+========================= */
+
+function PostsScreen({
+  posts,
+  mode = "posts",
+  onBack,
+  onCreate,
+}) {
+  const filtered = posts.filter((p) =>
+    mode === "reels"
+      ? p.type === "reel"
+      : p.type === "photo"
+  );
+
+  return (
+    <View style={styles.screen}>
+      <View style={styles.topBar}>
+        <TouchableOpacity onPress={onBack} style={styles.backBtn}>
+          <Text style={styles.backText}>‹</Text>
+        </TouchableOpacity>
+
+        <Text style={styles.topTitle}>
+          {mode === "reels" ? "🎬 Reels" : "📸 Posts"}
+        </Text>
+
+        <TouchableOpacity
+          style={styles.addTop}
+          onPress={onCreate}
+        >
+          <Text style={styles.addTopText}>＋</Text>
+        </TouchableOpacity>
+      </View>
+
+      <ScrollView
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+      >
+        {filtered.map((post) => (
+          <View key={post.id} style={styles.postCard}>
+            <View style={styles.postHeader}>
+              <View style={styles.postAvatar}>
+                <Text>🏪</Text>
+              </View>
+
+              <View style={{ flex: 1 }}>
+                <Text style={styles.postShop}>
+                  {post.shopName || "Vaniyambadi 360"}
+                </Text>
+
+                <Text style={styles.postDate}>
+                  {post.date || "Today"}
+                </Text>
+              </View>
+            </View>
+
+            <View style={styles.postMedia}>
+              <Text style={styles.postMediaIcon}>
+                {post.type === "reel" ? "🎬" : "📸"}
+              </Text>
+
+              <Text style={styles.postMediaText}>
+                {post.type === "reel"
+                  ? "REEL / SHORT VIDEO"
+                  : "PHOTO POST"}
+              </Text>
+            </View>
+
+            {post.caption ? (
+              <Text style={styles.postCaption}>
+                {post.caption}
+              </Text>
+            ) : null}
+
+            {post.location ? (
+              <Text style={styles.postLocation}>
+                📍 {post.location}
+              </Text>
+            ) : null}
+
+            {post.phone ? (
+              <View style={styles.postActions}>
+                <TouchableOpacity
+                  style={styles.postAction}
+                  onPress={() => callNumber(post.phone)}
+                >
+                  <Text>📞 Call</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.postAction}
+                  onPress={() => openWhatsApp(post.phone)}
+                >
+                  <Text>💬 WhatsApp</Text>
+                </TouchableOpacity>
+              </View>
+            ) : null}
+
+            {post.downloadEnabled ? (
+              <TouchableOpacity
+                style={styles.downloadButton}
+                onPress={() =>
+                  Alert.alert(
+                    "Download",
+                    "Download prototype enabled by shop owner."
+                  )
+                }
+              >
+                <Text style={styles.downloadText}>
+                  ⬇️ Download
+                </Text>
+              </TouchableOpacity>
+            ) : null}
+          </View>
+        ))}
+
+        {filtered.length === 0 ? (
+          <View style={styles.emptyBox}>
+            <Text style={styles.emptyIcon}>
+              {mode === "reels" ? "🎬" : "📸"}
+            </Text>
+
+            <Text style={styles.emptyTitle}>
+              No {mode === "reels" ? "reels" : "posts"} yet
+            </Text>
+
+            <Text style={styles.emptyText}>
+              ＋ button மூலம் புதிய content உருவாக்கலாம்.
+            </Text>
+          </View>
+        ) : null}
+      </ScrollView>
+    </View>
+  );
+}
+
+/* =========================
+   CREATE POST
+========================= */
+
+function CreatePostScreen({
+  onBack,
+  onSave,
+  defaultType = "photo",
+}) {
+  const [type, setType] = useState(defaultType);
+  const [shopName, setShopName] = useState("");
+  const [caption, setCaption] = useState("");
+  const [location, setLocation] = useState("");
+  const [phone, setPhone] = useState("");
+  const [downloadEnabled, setDownloadEnabled] = useState(true);
+
+  function save() {
+    onSave({
+      id: makeId("post"),
+      type,
+      shopName,
+      caption,
+      location,
+      phone,
+      downloadEnabled,
+      date: new Date().toLocaleDateString("en-IN"),
+    });
+  }
+
+  return (
+    <ScrollView
+      style={styles.screen}
+      contentContainerStyle={styles.content}
+    >
+      <View style={styles.topBar}>
+        <TouchableOpacity onPress={onBack} style={styles.backBtn}>
+          <Text style={styles.backText}>‹</Text>
+        </TouchableOpacity>
+
+        <Text style={styles.topTitle}>
+          Create Content
+        </Text>
+      </View>
+
+      <View style={styles.panelCard}>
+        <Text style={styles.panelTitle}>
+          Create Post / Reel
+        </Text>
+
+        <View style={styles.segment}>
+          <TouchableOpacity
+            style={[
+              styles.segmentButton,
+              type === "photo" && styles.segmentActive,
+            ]}
+            onPress={() => setType("photo")}
+          >
+            <Text style={styles.segmentText}>
+              📸 Photo
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[
+              styles.segmentButton,
+              type === "reel" && styles.segmentActive,
+            ]}
+            onPress={() => setType("reel")}
+          >
+            <Text style={styles.segmentText}>
+              🎬 Reel
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        <Input
+          label="Shop Name"
+          value={shopName}
+          onChangeText={setShopName}
+          placeholder="Shop name"
+        />
+
+        <Input
+          label="Caption"
+          value={caption}
+          onChangeText={setCaption}
+          placeholder="Write something..."
+          multiline
+        />
+
+        <Input
+          label="Address / Location"
+          value={location}
+          onChangeText={setLocation}
+          placeholder="Shop address"
+        />
+
+        <Input
+          label="Contact Number"
+          value={phone}
+          onChangeText={setPhone}
+          placeholder="Phone number"
+          keyboardType="phone-pad"
+        />
+
+        {type === "reel" ? (
+          <ToggleRow
+            title="Allow Download"
+            value={downloadEnabled}
+            onChange={setDownloadEnabled}
+          />
+        ) : null}
+
+        <TouchableOpacity
+          style={styles.uploadButton}
+          onPress={() =>
+            Alert.alert(
+              "Media",
+              type === "reel"
+                ? "Video picker integration can be connected here."
+                : "Image picker integration can be connected here."
+            )
+          }
+        >
+          <Text style={styles.uploadButtonText}>
+            {type === "reel"
+              ? "🎬 Select Video"
+              : "📸 Select Photo"}
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.primaryButton}
+          onPress={save}
+        >
+          <Text style={styles.primaryButtonText}>
+            🚀 Publish
+          </Text>
+        </TouchableOpacity>
+      </View>
+    </ScrollView>
+  );
+}
+
+/* =========================
+   MEMBERSHIP
+========================= */
+
+function MembershipScreen({ onBack }) {
+  return (
+    <ScrollView
+      style={styles.screen}
+      contentContainerStyle={styles.content}
+    >
+      <View style={styles.topBar}>
+        <TouchableOpacity onPress={onBack} style={styles.backBtn}>
+          <Text style={styles.backText}>‹</Text>
+        </TouchableOpacity>
+
+        <Text style={styles.topTitle}>
+          💳 Membership
+        </Text>
+      </View>
+
+      <View style={styles.membershipHero}>
+        <Text style={styles.membershipIcon}>🏪</Text>
+
+        <Text style={styles.membershipTitle}>
+          Shop Owner Membership
+        </Text>
+
+        <Text style={styles.price}>
+          ₹{MEMBERSHIP_PRICE}
+          <Text style={styles.priceSmall}> / month</Text>
+        </Text>
+
+        <Text style={styles.membershipText}>
+          Shop Owner control, photos, products, posts,
+          reels and shop settings.
+        </Text>
+      </View>
+
+      <View style={styles.panelCard}>
+        <Text style={styles.panelTitle}>
+          Included
+        </Text>
+
+        <Benefit text="Shop name edit" />
+        <Benefit text="Shop photos" />
+        <Benefit text="Products / Services" />
+        <Benefit text="Photo posts" />
+        <Benefit text="Reels upload" />
+        <Benefit text="Location / Map" />
+        <Benefit text="Call / WhatsApp" />
+        <Benefit text="Download ON / OFF" />
+        <Benefit text="WhatsApp display ON / OFF" />
+
+        <TouchableOpacity
+          style={styles.primaryButton}
+          onPress={() =>
+            Alert.alert(
+              "Payment",
+              "₹300/month payment gateway integration is pending."
+            )
+          }
+        >
+          <Text style={styles.primaryButtonText}>
+            💳 Pay ₹{MEMBERSHIP_PRICE}
+          </Text>
+        </TouchableOpacity>
+
+        <Text style={styles.paymentNote}>
+          UPI / GPay payment integration can be connected
+          to the Admin account in the backend.
         </Text>
       </View>
     </ScrollView>
   );
 }
 
-/* =========================================================
-   ADMIN LOGIN
-========================================================= */
+function Benefit({ text }) {
+  return (
+    <View style={styles.benefit}>
+      <Text style={styles.benefitIcon}>✓</Text>
+      <Text style={styles.benefitText}>{text}</Text>
+    </View>
+  );
+}
 
-function AdminLogin({ onSuccess, onCancel }) {
+/* =========================
+   ADMIN LOGIN
+========================= */
+
+function AdminLogin({ onBack, onSuccess }) {
   const [pin, setPin] = useState("");
 
   function login() {
     if (pin === ADMIN_PIN) {
       onSuccess();
     } else {
-      Alert.alert(
-        "Admin",
-        "Wrong Admin PIN."
-      );
+      Alert.alert("Admin", "Wrong Admin PIN.");
     }
   }
 
   return (
-    <SafeAreaView style={styles.safe}>
-      <ScrollView
-        contentContainerStyle={styles.authPage}
-      >
-        <TouchableOpacity onPress={onCancel}>
-          <Text style={styles.back}>
-            ‹ Back
-          </Text>
+    <ScrollView
+      style={styles.screen}
+      contentContainerStyle={styles.content}
+    >
+      <View style={styles.topBar}>
+        <TouchableOpacity onPress={onBack} style={styles.backBtn}>
+          <Text style={styles.backText}>‹</Text>
         </TouchableOpacity>
 
-        <PremiumIcon icon="⚙️" size={90} />
+        <Text style={styles.topTitle}>🔐 Admin Login</Text>
+      </View>
 
-        <Text style={styles.authTitle}>
-          ADMIN CONTROL
+      <View style={styles.adminLoginCard}>
+        <Text style={styles.adminLock}>🔐</Text>
+
+        <Text style={styles.panelTitle}>
+          VANIYAMBADI 360 ADMIN
         </Text>
 
-        <Text style={styles.authSub}>
-          VANIYAMBADI 360
+        <Text style={styles.panelText}>
+          Admin control — Add / Edit / Delete / Manage
         </Text>
 
-        <TextInput
+        <Input
+          label="Admin PIN"
           value={pin}
           onChangeText={setPin}
-          placeholder="Admin PIN"
-          placeholderTextColor="#94a3b8"
+          placeholder="Enter PIN"
           secureTextEntry
-          style={styles.input}
         />
 
         <TouchableOpacity
@@ -1721,883 +1788,387 @@ function AdminLogin({ onSuccess, onCancel }) {
           onPress={login}
         >
           <Text style={styles.primaryButtonText}>
-            🔐 Enter Admin
+            Login
           </Text>
         </TouchableOpacity>
-
-        <Text style={styles.prototypeNote}>
-          Prototype Admin PIN: 360ADMIN
-        </Text>
-      </ScrollView>
-    </SafeAreaView>
+      </View>
+    </ScrollView>
   );
 }
 
-/* =========================================================
-   ADMIN CONTROL
-========================================================= */
+/* =========================
+   ADMIN PANEL
+========================= */
 
 function AdminPanel({
   data,
+  onBack,
   onAdd,
   onEdit,
   onDelete,
-  onBack,
+  onLogout,
 }) {
-  const [name, setName] = useState("");
-  const [location, setLocation] = useState("");
-  const [phone, setPhone] = useState("");
-  const [category, setCategory] =
-    useState("shop");
+  const [query, setQuery] = useState("");
 
-  function addListing() {
+  const filtered = data.filter((item) => {
+    const q = query.toLowerCase();
+
+    return (
+      !q ||
+      String(item.name || "").toLowerCase().includes(q) ||
+      String(item.location || "").toLowerCase().includes(q)
+    );
+  });
+
+  return (
+    <View style={styles.screen}>
+      <View style={styles.topBar}>
+        <TouchableOpacity onPress={onBack} style={styles.backBtn}>
+          <Text style={styles.backText}>‹</Text>
+        </TouchableOpacity>
+
+        <Text style={styles.topTitle}>⚙️ Admin Panel</Text>
+      </View>
+
+      <ScrollView
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.adminDashboard}>
+          <Text style={styles.adminDashboardTitle}>
+            VANIYAMBADI 360
+          </Text>
+
+          <Text style={styles.adminDashboardSub}>
+            FULL ADMIN CONTROL
+          </Text>
+
+          <View style={styles.statsRow}>
+            <StatBox title="Listings" value={String(data.length)} />
+            <StatBox title="Categories" value={String(CATEGORIES.length)} />
+            <StatBox title="Membership" value="₹300" />
+          </View>
+        </View>
+
+        <View style={styles.adminActionGrid}>
+          <AdminAction
+            icon="＋"
+            title="Add Listing"
+            onPress={onAdd}
+          />
+
+          <AdminAction
+            icon="👥"
+            title="Members"
+            onPress={() =>
+              Alert.alert("Admin", "Member management area.")
+            }
+          />
+
+          <AdminAction
+            icon="🏪"
+            title="Shop Owners"
+            onPress={() =>
+              Alert.alert("Admin", "Shop owner management area.")
+            }
+          />
+
+          <AdminAction
+            icon="🎬"
+            title="Reels"
+            onPress={() =>
+              Alert.alert("Admin", "Reels management area.")
+            }
+          />
+
+          <AdminAction
+            icon="🎁"
+            title="Offers"
+            onPress={() =>
+              Alert.alert("Admin", "Offers management area.")
+            }
+          />
+
+          <AdminAction
+            icon="💳"
+            title="Payments"
+            onPress={() =>
+              Alert.alert(
+                "Admin",
+                "₹300/month payment management area."
+              )
+            }
+          />
+        </View>
+
+        <View style={styles.directorySearch}>
+          <Text style={{ fontSize: 18 }}>🔎</Text>
+
+          <TextInput
+            value={query}
+            onChangeText={setQuery}
+            placeholder="Search listing..."
+            placeholderTextColor="#94a3b8"
+            style={styles.directoryInput}
+          />
+        </View>
+
+        {filtered.map((item) => (
+          <ListingCard
+            key={item.id}
+            item={item}
+            adminMode
+            onEdit={onEdit}
+            onDelete={onDelete}
+          />
+        ))}
+
+        <TouchableOpacity
+          style={styles.logoutButton}
+          onPress={onLogout}
+        >
+          <Text style={styles.logoutText}>
+            Logout Admin
+          </Text>
+        </TouchableOpacity>
+      </ScrollView>
+    </View>
+  );
+}
+
+function StatBox({ title, value }) {
+  return (
+    <View style={styles.statBox}>
+      <Text style={styles.statValue}>{value}</Text>
+      <Text style={styles.statTitle}>{title}</Text>
+    </View>
+  );
+}
+
+function AdminAction({ icon, title, onPress }) {
+  return (
+    <TouchableOpacity
+      style={styles.adminAction}
+      onPress={onPress}
+    >
+      <Text style={styles.adminActionIcon}>{icon}</Text>
+      <Text style={styles.adminActionTitle}>{title}</Text>
+    </TouchableOpacity>
+  );
+}
+
+/* =========================
+   EDIT LISTING
+========================= */
+
+function EditListing({
+  item,
+  onBack,
+  onSave,
+  isNew = false,
+}) {
+  const [name, setName] = useState(item?.name || "");
+  const [category, setCategory] = useState(
+    item?.category || "shop"
+  );
+  const [location, setLocation] = useState(
+    item?.location || ""
+  );
+  const [phone, setPhone] = useState(
+    item?.phone || ""
+  );
+  const [description, setDescription] = useState(
+    item?.description || ""
+  );
+
+  function save() {
     if (!name.trim()) {
-      Alert.alert(
-        "Admin",
-        "Shop / Listing name தேவை."
-      );
+      Alert.alert("Admin", "Name enter செய்யுங்கள்.");
       return;
     }
 
-    onAdd({
-      name: name.trim(),
+    onSave({
+      ...(item || {}),
+      id: item?.id || makeId("listing"),
+      name,
       category,
-      location:
-        location.trim() || "Vaniyambadi",
-      phone: phone.trim(),
-      verified: true,
+      location,
+      phone,
+      description,
     });
-
-    setName("");
-    setLocation("");
-    setPhone("");
-
-    Alert.alert(
-      "Admin",
-      "Listing added successfully."
-    );
   }
 
   return (
     <ScrollView
-      style={styles.page}
-      contentContainerStyle={styles.pageContent}
+      style={styles.screen}
+      contentContainerStyle={styles.content}
     >
-      <BackButton onPress={onBack} />
+      <View style={styles.topBar}>
+        <TouchableOpacity onPress={onBack} style={styles.backBtn}>
+          <Text style={styles.backText}>‹</Text>
+        </TouchableOpacity>
 
-      <View style={styles.adminHero}>
-        <PremiumIcon icon="⚙️" size={82} />
-
-        <Text style={styles.adminHeroTitle}>
-          ADMIN CONTROL
-        </Text>
-
-        <Text style={styles.adminHeroSub}>
-          YOU ARE THE ADMIN
+        <Text style={styles.topTitle}>
+          {isNew ? "＋ Add Listing" : "✏️ Edit Listing"}
         </Text>
       </View>
 
-      {/* CONTROL GRID */}
-
-      <Text style={styles.sectionTitle}>
-        🛠️ Admin Powers
-      </Text>
-
-      <View style={styles.adminPowerGrid}>
-        {[
-          ["🏪", "Manage Shops"],
-          ["📚", "Categories"],
-          ["👤", "Members"],
-          ["🏪", "Shop Owners"],
-          ["📝", "Posts"],
-          ["📷", "Photos"],
-          ["🎬", "Reels"],
-          ["💎", "Membership"],
-          ["📞", "Contacts"],
-          ["📍", "Locations"],
-          ["🛒", "Products"],
-          ["⚙️", "Settings"],
-        ].map(([icon, title]) => (
-          <View
-            key={title}
-            style={styles.powerCard}
-          >
-            <Text style={styles.powerIcon}>
-              {icon}
-            </Text>
-
-            <Text style={styles.powerText}>
-              {title}
-            </Text>
-          </View>
-        ))}
-      </View>
-
-      {/* ADD */}
-
-      <View style={styles.adminForm}>
-        <Text style={styles.adminFormTitle}>
-          ＋ Add New Listing
-        </Text>
-
+      <View style={styles.panelCard}>
         <Input
           label="Name"
           value={name}
-          onChange={setName}
-          placeholder="Shop / Hospital / School"
+          onChangeText={setName}
+          placeholder="Listing name"
         />
 
-        <Text style={styles.label}>
+        <Text style={styles.inputLabel}>
           Category
         </Text>
 
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
-          style={{ marginBottom: 12 }}
+          contentContainerStyle={{ paddingBottom: 12 }}
         >
-          {CATEGORIES
-            .filter(
-              (x) =>
-                !["all"].includes(x[0])
-            )
-            .map((c) => (
-              <TouchableOpacity
-                key={c[0]}
+          {CATEGORIES.filter(
+            (x) => x.id !== "all"
+          ).map((cat) => (
+            <TouchableOpacity
+              key={cat.id}
+              style={[
+                styles.categoryChip,
+                category === cat.id &&
+                  styles.categoryChipActive,
+              ]}
+              onPress={() => setCategory(cat.id)}
+            >
+              <Text>{cat.icon}</Text>
+              <Text
                 style={[
-                  styles.chip,
-                  category === c[0] &&
-                    styles.chipActive,
+                  styles.categoryChipText,
+                  category === cat.id &&
+                    styles.categoryChipTextActive,
                 ]}
-                onPress={() =>
-                  setCategory(c[0])
-                }
               >
-                <Text style={styles.chipIcon}>
-                  {c[1]}
-                </Text>
-
-                <Text
-                  style={[
-                    styles.chipText,
-                    category === c[0] &&
-                      styles.chipTextActive,
-                  ]}
-                >
-                  {c[2]}
-                </Text>
-              </TouchableOpacity>
-            ))}
+                {cat.name}
+              </Text>
+            </TouchableOpacity>
+          ))}
         </ScrollView>
 
         <Input
           label="Location"
           value={location}
-          onChange={setLocation}
-          placeholder="Vaniyambadi"
+          onChangeText={setLocation}
+          placeholder="Location"
         />
 
         <Input
           label="Phone"
           value={phone}
-          onChange={setPhone}
-          placeholder="Contact Number"
+          onChangeText={setPhone}
+          placeholder="Phone number"
           keyboardType="phone-pad"
+        />
+
+        <Input
+          label="Description"
+          value={description}
+          onChangeText={setDescription}
+          placeholder="Description"
+          multiline
         />
 
         <TouchableOpacity
           style={styles.primaryButton}
-          onPress={addListing}
+          onPress={save}
         >
           <Text style={styles.primaryButtonText}>
-            ＋ Add Listing
+            💾 Save
           </Text>
         </TouchableOpacity>
       </View>
-
-      {/* LIST */}
-
-      <Text style={styles.sectionTitle}>
-        📋 Current Listings ({data.length})
-      </Text>
-
-      {data.slice(0, 60).map((item, index) => (
-        <View
-          key={`${item.name}-${index}`}
-          style={styles.adminListing}
-        >
-          <View style={{ flex: 1 }}>
-            <Text style={styles.adminListingName}>
-              {item.name}
-            </Text>
-
-            <Text style={styles.adminListingInfo}>
-              {categoryInfo(item.category)?.[1]}{" "}
-              {item.location}
-            </Text>
-          </View>
-
-          <TouchableOpacity
-            style={styles.editMini}
-            onPress={() =>
-              onEdit(item, index)
-            }
-          >
-            <Text>✏️</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.deleteMini}
-            onPress={() =>
-              onDelete(index)
-            }
-          >
-            <Text>🗑️</Text>
-          </TouchableOpacity>
-        </View>
-      ))}
     </ScrollView>
   );
 }
 
-/* =========================================================
-   EDIT LISTING
-========================================================= */
-
-function EditListing({
-  item,
-  onSave,
-  onDelete,
-  onBack,
-}) {
-  const [name, setName] = useState(
-    item.name || ""
-  );
-  const [location, setLocation] = useState(
-    item.location || ""
-  );
-  const [phone, setPhone] = useState(
-    item.phone || ""
-  );
-
-  return (
-    <ScrollView
-      style={styles.page}
-      contentContainerStyle={styles.pageContent}
-    >
-      <BackButton onPress={onBack} />
-
-      <Text style={styles.screenTitle}>
-        ✏️ Edit Listing
-      </Text>
-
-      <Input
-        label="Name"
-        value={name}
-        onChange={setName}
-        placeholder="Name"
-      />
-
-      <Input
-        label="Location"
-        value={location}
-        onChange={setLocation}
-        placeholder="Location"
-      />
-
-      <Input
-        label="Phone"
-        value={phone}
-        onChange={setPhone}
-        placeholder="Phone"
-      />
-
-      <TouchableOpacity
-        style={styles.primaryButton}
-        onPress={() =>
-          onSave({
-            ...item,
-            name,
-            location,
-            phone,
-          })
-        }
-      >
-        <Text style={styles.primaryButtonText}>
-          💾 Save Changes
-        </Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        style={styles.dangerButton}
-        onPress={() => onDelete(item)}
-      >
-        <Text style={styles.dangerText}>
-          🗑️ Delete Listing
-        </Text>
-      </TouchableOpacity>
-    </ScrollView>
-  );
-}
-
-/* =========================================================
-   GOVERNMENT / EMERGENCY
-========================================================= */
-
-function SpecialList({
-  title,
-  icon,
-  data,
-  onBack,
-}) {
-  return (
-    <ScrollView
-      style={styles.page}
-      contentContainerStyle={styles.pageContent}
-    >
-      <BackButton onPress={onBack} />
-
-      <View style={styles.specialHeader}>
-        <PremiumIcon icon={icon} size={76} />
-
-        <Text style={styles.screenTitle}>
-          {title}
-        </Text>
-      </View>
-
-      {data.map((item, index) => (
-        <ListingCard
-          key={`${item.name}-${index}`}
-          item={item}
-        />
-      ))}
-    </ScrollView>
-  );
-}
-
-/* =========================================================
+/* =========================
    INPUT
-========================================================= */
+========================= */
 
 function Input({
   label,
   value,
-  onChange,
+  onChangeText,
   placeholder,
+  multiline = false,
   keyboardType,
-  multiline,
+  secureTextEntry = false,
 }) {
   return (
-    <View style={{ marginBottom: 14 }}>
-      <Text style={styles.label}>
-        {label}
-      </Text>
+    <View style={styles.inputWrap}>
+      <Text style={styles.inputLabel}>{label}</Text>
 
       <TextInput
         value={value}
-        onChangeText={onChange}
+        onChangeText={onChangeText}
         placeholder={placeholder}
         placeholderTextColor="#94a3b8"
-        keyboardType={keyboardType}
-        multiline={multiline}
         style={[
           styles.input,
-          multiline && styles.textArea,
+          multiline && styles.inputMultiline,
         ]}
+        multiline={multiline}
+        keyboardType={keyboardType}
+        secureTextEntry={secureTextEntry}
       />
     </View>
   );
 }
 
-/* =========================================================
-   BACK
-========================================================= */
+/* =========================
+   BOTTOM NAV
+========================= */
 
-function BackButton({ onPress }) {
+function BottomNav({
+  screen,
+  onHome,
+  onSearch,
+  onEmergency,
+  onAdmin,
+}) {
   return (
-    <TouchableOpacity
-      onPress={onPress}
-      style={styles.backButton}
-    >
-      <Text style={styles.back}>
-        ‹ Back
-      </Text>
-    </TouchableOpacity>
+    <View style={styles.bottomNav}>
+      <NavButton
+        icon="🏠"
+        title="Home"
+        active={screen === "home"}
+        onPress={onHome}
+      />
+
+      <NavButton
+        icon="🔎"
+        title="Search"
+        active={screen === "directory"}
+        onPress={onSearch}
+      />
+
+      <NavButton
+        icon="🚨"
+        title="Emergency"
+        active={screen === "emergency"}
+        onPress={onEmergency}
+      />
+
+      <NavButton
+        icon="⚙️"
+        title="Admin"
+        active={screen === "admin" || screen === "adminLogin"}
+        onPress={onAdmin}
+      />
+    </View>
   );
 }
-
-/* =========================================================
-   APP
-========================================================= */
-
-export default function App() {
-  const [data, setData] =
-    useState(INITIAL_DATA);
-
-  const [tab, setTab] =
-    useState("home");
-
-  const [category, setCategory] =
-    useState("all");
-
-  const [search, setSearch] =
-    useState("");
-
-  const [admin, setAdmin] =
-    useState(false);
-
-  const [adminLogin, setAdminLogin] =
-    useState(false);
-
-  const [member, setMember] =
-    useState(null);
-
-  const [favourites, setFavourites] =
-    useState({});
-
-  const [posts, setPosts] =
-    useState([]);
-
-  const [screen, setScreen] =
-    useState(null);
-
-  const [editing, setEditing] =
-    useState(null);
-
-  function toggleFavourite(name) {
-    setFavourites((prev) => ({
-      ...prev,
-      [name]: !prev[name],
-    }));
-  }
-
-  function addListing(item) {
-    setData((prev) => [
-      item,
-      ...prev,
-    ]);
-  }
-
-  function updateListing(item) {
-    setData((prev) =>
-      prev.map((x) =>
-        x === editing?.item
-          ? item
-          : x
-      )
-    );
-
-    setEditing(null);
-  }
-
-  function deleteListing(item) {
-    Alert.alert(
-      "Delete",
-      `Delete ${item.name}?`,
-      [
-        {
-          text: "Cancel",
-          style: "cancel",
-        },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: () => {
-            setData((prev) =>
-              prev.filter(
-                (x) => x !== item
-              )
-            );
-            setEditing(null);
-          },
-        },
-      ]
-    );
-  }
-
-  function openAdmin() {
-    if (admin) {
-      setScreen("admin");
-    } else {
-      setAdminLogin(true);
-    }
-  }
-
-  function openScreen(name) {
-    setScreen(name);
-  }
-
-  function goHome() {
-    setScreen(null);
-    setTab("home");
-  }
-
-  if (adminLogin) {
-    return (
-      <AdminLogin
-        onCancel={() =>
-          setAdminLogin(false)
-        }
-        onSuccess={() => {
-          setAdminLogin(false);
-          setAdmin(true);
-          setScreen("admin");
-        }}
-      />
-    );
-  }
-
-  if (screen === "admin") {
-    return (
-      <SafeAreaView style={styles.safe}>
-        <AdminPanel
-          data={data}
-          onBack={goHome}
-          onAdd={addListing}
-          onEdit={(item) =>
-            setEditing({ item })
-          }
-          onDelete={(index) => {
-            const item = data[index];
-
-            Alert.alert(
-              "Delete",
-              `Delete ${item?.name}?`,
-              [
-                {
-                  text: "Cancel",
-                  style: "cancel",
-                },
-                {
-                  text: "Delete",
-                  style: "destructive",
-                  onPress: () =>
-                    setData((prev) =>
-                      prev.filter(
-                        (_, i) =>
-                          i !== index
-                      )
-                    ),
-                },
-              ]
-            );
-          }}
-        />
-      </SafeAreaView>
-    );
-  }
-
-  if (editing) {
-    return (
-      <SafeAreaView style={styles.safe}>
-        <EditListing
-          item={editing.item}
-          onBack={() =>
-            setEditing(null)
-          }
-          onSave={updateListing}
-          onDelete={deleteListing}
-        />
-      </SafeAreaView>
-    );
-  }
-
-  if (screen === "member") {
-    if (member) {
-      return (
-        <SafeAreaView style={styles.safe}>
-          <ScrollView
-            style={styles.page}
-            contentContainerStyle={
-              styles.pageContent
-            }
-          >
-            <BackButton onPress={goHome} />
-
-            <View style={styles.profileHero}>
-              <PremiumIcon
-                icon="👤"
-                size={90}
-              />
-
-              <Text style={styles.profileName}>
-                {member.name}
-              </Text>
-
-              <Text style={styles.profileInfo}>
-                📞 {member.phone}
-              </Text>
-
-              <Text style={styles.profileInfo}>
-                📍 {member.area}
-              </Text>
-            </View>
-
-            <FeatureCard
-              icon="❤️"
-              title="Favourite Shops"
-              subtitle="Saved listings"
-              onPress={() => {
-                setCategory("shop");
-                setTab("search");
-                setScreen(null);
-              }}
-            />
-
-            <TouchableOpacity
-              style={styles.dangerButton}
-              onPress={() =>
-                setMember(null)
-              }
-            >
-              <Text style={styles.dangerText}>
-                Logout
-              </Text>
-            </TouchableOpacity>
-          </ScrollView>
-        </SafeAreaView>
-      );
-    }
-
-    return (
-      <MemberAuth
-        onCancel={goHome}
-        onSuccess={(m) => {
-          setMember(m);
-          goHome();
-        }}
-      />
-    );
-  }
-
-  if (screen === "owner") {
-    return (
-      <SafeAreaView style={styles.safe}>
-        <ShopOwner
-          onBack={goHome}
-          openScreen={openScreen}
-        />
-      </SafeAreaView>
-    );
-  }
-
-  if (screen === "membership") {
-    return (
-      <SafeAreaView style={styles.safe}>
-        <Membership onBack={goHome} />
-      </SafeAreaView>
-    );
-  }
-
-  if (
-    screen === "posts" ||
-    screen === "photos" ||
-    screen === "reels"
-  ) {
-    return (
-      <SafeAreaView style={styles.safe}>
-        <ContentScreen
-          type={screen}
-          posts={posts}
-          onBack={goHome}
-          onCreate={() =>
-            openScreen("createPost")
-          }
-        />
-      </SafeAreaView>
-    );
-  }
-
-  if (screen === "createPost") {
-    return (
-      <SafeAreaView style={styles.safe}>
-        <CreatePost
-          onBack={goHome}
-          onPublish={(post) => {
-            setPosts((prev) => [
-              post,
-              ...prev,
-            ]);
-            goHome();
-          }}
-        />
-      </SafeAreaView>
-    );
-  }
-
-  if (screen === "products") {
-    return (
-      <SafeAreaView style={styles.safe}>
-        <ScrollView
-          style={styles.page}
-          contentContainerStyle={
-            styles.pageContent
-          }
-        >
-          <BackButton onPress={goHome} />
-
-          <Text style={styles.screenTitle}>
-            🛒 My Products
-          </Text>
-
-          <Text style={styles.screenSub}>
-            Shop Owner Product Management
-          </Text>
-
-          <FeatureCard
-            icon="＋"
-            title="Add Product"
-            subtitle="Coming in backend"
-            onPress={() =>
-              Alert.alert(
-                "Products",
-                "Product database can be connected next."
-              )
-            }
-          />
-        </ScrollView>
-      </SafeAreaView>
-    );
-  }
-
-  if (screen === "government") {
-    return (
-      <SafeAreaView style={styles.safe}>
-        <SpecialList
-          title="Government Help"
-          icon="🏛️"
-          data={GOVERNMENT}
-          onBack={goHome}
-        />
-      </SafeAreaView>
-    );
-  }
-
-  if (screen === "emergency") {
-    return (
-      <SafeAreaView style={styles.safe}>
-        <SpecialList
-          title="Emergency Help"
-          icon="🚨"
-          data={EMERGENCY}
-          onBack={goHome}
-        />
-      </SafeAreaView>
-    );
-  }
-
-  return (
-    <SafeAreaView style={styles.safe}>
-      {tab === "home" && (
-        <Home
-          setCategory={(c) => {
-            setCategory(c);
-            setTab("search");
-          }}
-          openEmergency={() =>
-            openScreen("emergency")
-          }
-          openGovernment={() =>
-            openScreen("government")
-          }
-          openAdmin={openAdmin}
-          openScreen={openScreen}
-          member={member}
-        />
-      )}
-
-      {tab === "search" && (
-        <Directory
-          data={data}
-          category={category}
-          setCategory={setCategory}
-          search={search}
-          setSearch={setSearch}
-          favourites={favourites}
-          toggleFavourite={
-            toggleFavourite
-          }
-          admin={admin}
-          openEdit={(item) =>
-            setEditing({ item })
-          }
-        />
-      )}
-
-      {tab === "emergency" && (
-        <SpecialList
-          title="Emergency Help"
-          icon="🚨"
-          data={EMERGENCY}
-          onBack={() => setTab("home")}
-        />
-      )}
-
-      {tab === "admin" && (
-        <AdminPanel
-          data={data}
-          onBack={() => setTab("home")}
-          onAdd={addListing}
-          onEdit={(item) =>
-            setEditing({ item })
-          }
-          onDelete={(index) =>
-            setData((prev) =>
-              prev.filter(
-                (_, i) => i !== index
-              )
-            )
-          }
-        />
-      )}
-
-      {/* BOTTOM NAV */}
-
-      <View style={styles.bottomNav}>
-        <NavButton
-          icon="🏠"
-          title="Home"
-          active={tab === "home"}
-          onPress={() => {
-            setTab("home");
-            setScreen(null);
-          }}
-        />
-
-        <NavButton
-          icon="🔎"
-          title="Search"
-          active={tab === "search"}
-          onPress={() => {
-            setTab("search");
-            setScreen(null);
-          }}
-        />
-
-        <NavButton
-          icon="🚨"
-          title="Emergency"
-          active={tab === "emergency"}
-          onPress={() => {
-            setTab("emergency");
-            setScreen(null);
-          }}
-        />
-
-        <NavButton
-          icon="⚙️"
-          title="Admin"
-          active={tab === "admin"}
-          onPress={openAdmin}
-        />
-      </View>
-    </SafeAreaView>
-  );
-}
-
-/* =========================================================
-   NAV BUTTON
-========================================================= */
 
 function NavButton({
   icon,
@@ -2609,18 +2180,15 @@ function NavButton({
     <TouchableOpacity
       style={[
         styles.navButton,
-        active && styles.navActive,
+        active && styles.navButtonActive,
       ]}
       onPress={onPress}
     >
-      <Text style={styles.navIcon}>
-        {icon}
-      </Text>
-
+      <Text style={styles.navIcon}>{icon}</Text>
       <Text
         style={[
-          styles.navText,
-          active && styles.navTextActive,
+          styles.navTitle,
+          active && styles.navTitleActive,
         ]}
       >
         {title}
@@ -2629,869 +2197,1191 @@ function NavButton({
   );
 }
 
-/* =========================================================
+/* =========================
+   MAIN APP
+========================= */
+
+export default function App() {
+  const [data, setData] = useState(INITIAL_DATA);
+
+  const [screen, setScreen] = useState("home");
+
+  const [directoryCategory, setDirectoryCategory] =
+    useState("all");
+
+  const [adminLogged, setAdminLogged] =
+    useState(false);
+
+  const [editingItem, setEditingItem] =
+    useState(null);
+
+  const [posts, setPosts] = useState([
+    {
+      id: "post_demo_1",
+      type: "photo",
+      shopName: "Vaniyambadi 360",
+      caption:
+        "VANIYAMBADI — LOCAL, ALL AROUND",
+      location: "Vaniyambadi",
+      date: "Today",
+    },
+  ]);
+
+  function goHome() {
+    setScreen("home");
+  }
+
+  function openDirectory(category = "all") {
+    setDirectoryCategory(category);
+    setScreen("directory");
+  }
+
+  function openAdmin() {
+    if (adminLogged) {
+      setScreen("admin");
+    } else {
+      setScreen("adminLogin");
+    }
+  }
+
+  function saveListing(item) {
+    setData((prev) => {
+      const exists = prev.some(
+        (x) => x.id === item.id
+      );
+
+      if (exists) {
+        return prev.map((x) =>
+          x.id === item.id ? item : x
+        );
+      }
+
+      return [item, ...prev];
+    });
+
+    setEditingItem(null);
+    setScreen("admin");
+
+    Alert.alert(
+      "Admin",
+      "Listing saved successfully."
+    );
+  }
+
+  function deleteListing(item) {
+    Alert.alert(
+      "Delete Listing",
+      `${item.name} delete செய்யவா?`,
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: () => {
+            setData((prev) =>
+              prev.filter((x) => x.id !== item.id)
+            );
+          },
+        },
+      ]
+    );
+  }
+
+  function savePost(post) {
+    setPosts((prev) => [post, ...prev]);
+
+    setScreen(
+      post.type === "reel"
+        ? "reels"
+        : "posts"
+    );
+  }
+
+  let content = null;
+
+  if (screen === "home") {
+    content = (
+      <Home
+        data={data}
+        onSearch={() => openDirectory("all")}
+        onCategory={openDirectory}
+        onMember={() => setScreen("member")}
+        onOwner={() => setScreen("owner")}
+        onPosts={() => setScreen("posts")}
+        onReels={() => setScreen("reels")}
+        onAdmin={openAdmin}
+      />
+    );
+  }
+
+  if (screen === "directory") {
+    content = (
+      <Directory
+        data={data}
+        initialCategory={directoryCategory}
+        onBack={goHome}
+      />
+    );
+  }
+
+  if (screen === "emergency") {
+    content = (
+      <EmergencyScreen onBack={goHome} />
+    );
+  }
+
+  if (screen === "government") {
+    content = (
+      <GovernmentScreen onBack={goHome} />
+    );
+  }
+
+  if (screen === "member") {
+    content = (
+      <MemberScreen
+        onBack={goHome}
+      />
+    );
+  }
+
+  if (screen === "owner") {
+    content = (
+      <ShopOwnerScreen
+        onBack={goHome}
+        onMembership={() =>
+          setScreen("membership")
+        }
+      />
+    );
+  }
+
+  if (screen === "posts") {
+    content = (
+      <PostsScreen
+        posts={posts}
+        mode="posts"
+        onBack={goHome}
+        onCreate={() =>
+          setScreen("createPost")
+        }
+      />
+    );
+  }
+
+  if (screen === "reels") {
+    content = (
+      <PostsScreen
+        posts={posts}
+        mode="reels"
+        onBack={goHome}
+        onCreate={() =>
+          setScreen("createReel")
+        }
+      />
+    );
+  }
+
+  if (screen === "createPost") {
+    content = (
+      <CreatePostScreen
+        defaultType="photo"
+        onBack={() => setScreen("posts")}
+        onSave={savePost}
+      />
+    );
+  }
+
+  if (screen === "createReel") {
+    content = (
+      <CreatePostScreen
+        defaultType="reel"
+        onBack={() => setScreen("reels")}
+        onSave={savePost}
+      />
+    );
+  }
+
+  if (screen === "membership") {
+    content = (
+      <MembershipScreen
+        onBack={() => setScreen("owner")}
+      />
+    );
+  }
+
+  if (screen === "adminLogin") {
+    content = (
+      <AdminLogin
+        onBack={goHome}
+        onSuccess={() => {
+          setAdminLogged(true);
+          setScreen("admin");
+        }}
+      />
+    );
+  }
+
+  if (screen === "admin") {
+    if (!adminLogged) {
+      content = (
+        <AdminLogin
+          onBack={goHome}
+          onSuccess={() => {
+            setAdminLogged(true);
+            setScreen("admin");
+          }}
+        />
+      );
+    } else {
+      content = (
+        <AdminPanel
+          data={data}
+          onBack={goHome}
+          onAdd={() => {
+            setEditingItem(null);
+            setScreen("edit");
+          }}
+          onEdit={(item) => {
+            setEditingItem(item);
+            setScreen("edit");
+          }}
+          onDelete={deleteListing}
+          onLogout={() => {
+            setAdminLogged(false);
+            setScreen("home");
+          }}
+        />
+      );
+    }
+  }
+
+  if (screen === "edit") {
+    content = (
+      <EditListing
+        item={editingItem}
+        isNew={!editingItem}
+        onBack={() => setScreen("admin")}
+        onSave={saveListing}
+      />
+    );
+  }
+
+  const showBottomNav = [
+    "home",
+    "directory",
+    "emergency",
+    "admin",
+    "adminLogin",
+  ].includes(screen);
+
+  return (
+    <SafeAreaView style={styles.safe}>
+      <StatusBar
+        barStyle="dark-content"
+        backgroundColor="#ffffff"
+      />
+
+      <View style={styles.app}>
+        {content}
+
+        {showBottomNav ? (
+          <BottomNav
+            screen={screen}
+            onHome={goHome}
+            onSearch={() => openDirectory("all")}
+            onEmergency={() =>
+              setScreen("emergency")
+            }
+            onAdmin={openAdmin}
+          />
+        ) : null}
+      </View>
+    </SafeAreaView>
+  );
+}
+
+/* =========================
    STYLES
-========================================================= */
+========================= */
 
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: "#f6f8fc",
+    backgroundColor: "#f8fafc",
   },
 
-  page: {
+  app: {
     flex: 1,
-    backgroundColor: "#f6f8fc",
+    backgroundColor: "#f8fafc",
   },
 
-  pageContent: {
+  screen: {
+    flex: 1,
+    backgroundColor: "#f8fafc",
+  },
+
+  content: {
     padding: 16,
-    paddingBottom: 110,
+    paddingBottom: 100,
   },
 
   header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 14,
+    backgroundColor: "#ffffff",
+    paddingBottom: 12,
   },
 
-  brand: {
-    fontSize: 22,
+  brandRow: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+
+  logoCircle: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: "#2563eb",
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 10,
+  },
+
+  logoText: {
+    color: "#ffffff",
+    fontSize: 24,
     fontWeight: "900",
-    color: "#101828",
+  },
+
+  brandBig: {
+    fontSize: 20,
+    fontWeight: "900",
+    color: "#0f172a",
     letterSpacing: 0.5,
   },
 
-  brand83: {
-    fontSize: 14,
-    fontWeight: "900",
-    color: "#7c3aed",
-    marginTop: 2,
+  brandBlue: {
+    color: "#2563eb",
   },
 
-  tagline: {
+  brandSmall: {
+    marginTop: 2,
     fontSize: 10,
-    fontWeight: "800",
     color: "#64748b",
+    fontWeight: "800",
     letterSpacing: 2,
-    marginTop: 2,
   },
 
-  adminSmall: {
-    backgroundColor: "#101828",
-    borderRadius: 16,
-    paddingHorizontal: 12,
-    paddingVertical: 9,
-    alignItems: "center",
+  adminMini: {
+    backgroundColor: "#eff6ff",
+    borderWidth: 1,
+    borderColor: "#bfdbfe",
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    borderRadius: 12,
   },
 
-  adminSmallIcon: {
-    fontSize: 18,
-  },
-
-  adminSmallText: {
-    color: "#fff",
-    fontSize: 9,
+  adminMiniText: {
+    color: "#1d4ed8",
+    fontSize: 10,
     fontWeight: "900",
-    marginTop: 2,
   },
 
   hero: {
-    backgroundColor: "#111827",
-    borderRadius: 28,
-    padding: 24,
-    marginBottom: 18,
-    overflow: "hidden",
-  },
-
-  heroSmall: {
-    color: "#a7f3d0",
-    fontSize: 13,
-    fontWeight: "900",
-    letterSpacing: 2,
+    backgroundColor: "#ffffff",
+    borderRadius: 24,
+    padding: 22,
+    marginTop: 8,
+    borderWidth: 1,
+    borderColor: "#e2e8f0",
   },
 
   heroTitle: {
-    color: "#fff",
-    fontSize: 29,
+    fontSize: 32,
     fontWeight: "900",
-    marginTop: 4,
+    color: "#0f172a",
+  },
+
+  heroSub: {
+    fontSize: 15,
+    fontWeight: "800",
+    color: "#2563eb",
+    letterSpacing: 2,
+    marginTop: 2,
   },
 
   heroTamil: {
-    color: "#cbd5e1",
-    fontSize: 13,
-    marginTop: 10,
-    lineHeight: 20,
+    marginTop: 8,
+    color: "#64748b",
+    fontSize: 14,
   },
 
-  freeBadge: {
-    alignSelf: "flex-start",
-    backgroundColor: "#064e3b",
-    borderRadius: 20,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    marginTop: 16,
+  searchBox: {
+    marginTop: 18,
+    backgroundColor: "#f1f5f9",
+    borderRadius: 16,
+    padding: 15,
+    flexDirection: "row",
+    alignItems: "center",
   },
 
-  freeText: {
-    color: "#a7f3d0",
-    fontSize: 11,
-    fontWeight: "900",
+  searchIcon: {
+    fontSize: 19,
+    marginRight: 9,
   },
 
-  sectionHeader: {
-    marginTop: 4,
-    marginBottom: 10,
+  searchPlaceholder: {
+    color: "#64748b",
+    fontSize: 15,
   },
 
   sectionTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: "900",
-    color: "#111827",
+    color: "#0f172a",
+    marginTop: 24,
     marginBottom: 12,
   },
 
-  twoColumns: {
-    flexDirection: "row",
-    gap: 12,
-    marginBottom: 18,
-  },
-
-  featureGrid: {
+  quickGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 12,
-    marginBottom: 18,
+    justifyContent: "space-between",
+  },
+
+  actionButton: {
+    width: "48%",
+    backgroundColor: "#ffffff",
+    borderWidth: 1,
+    borderColor: "#e2e8f0",
+    borderRadius: 18,
+    padding: 15,
+    marginBottom: 12,
+    minHeight: 92,
+    justifyContent: "center",
+  },
+
+  actionSecondary: {
+    backgroundColor: "#f8fafc",
+  },
+
+  actionIcon: {
+    fontSize: 28,
+    marginBottom: 7,
+  },
+
+  actionText: {
+    color: "#0f172a",
+    fontWeight: "800",
+    fontSize: 14,
   },
 
   featureCard: {
-    backgroundColor: "#fff",
-    borderRadius: 22,
-    padding: 14,
-    width: "47%",
-    minHeight: 140,
-    borderWidth: 1,
-    borderColor: "#e8edf5",
-    shadowColor: "#0f172a",
-    shadowOpacity: 0.06,
-    shadowRadius: 12,
-    shadowOffset: {
-      width: 0,
-      height: 5,
-    },
-    elevation: 3,
-  },
-
-  iconCircle: {
-    backgroundColor: "#f1f5f9",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  featureTitle: {
-    fontSize: 15,
-    fontWeight: "900",
-    color: "#111827",
-    marginTop: 10,
-  },
-
-  featureSubtitle: {
-    fontSize: 11,
-    color: "#64748b",
-    marginTop: 3,
-  },
-
-  emergencyBox: {
-    backgroundColor: "#fff1f2",
-    borderWidth: 1,
-    borderColor: "#fecdd3",
-    borderRadius: 24,
-    padding: 16,
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 16,
-  },
-
-  emergencyTitle: {
-    color: "#be123c",
-    fontSize: 19,
-    fontWeight: "900",
-  },
-
-  emergencySub: {
-    color: "#475569",
-    fontSize: 12,
-    marginTop: 4,
-  },
-
-  emergencyTamil: {
-    color: "#be123c",
-    fontWeight: "700",
-    fontSize: 12,
-    marginTop: 4,
-  },
-
-  arrow: {
-    fontSize: 32,
-    color: "#64748b",
-  },
-
-  adminPanelPreview: {
-    backgroundColor: "#eef2ff",
-    borderRadius: 24,
+    backgroundColor: "#eff6ff",
+    borderRadius: 20,
     padding: 18,
-    borderWidth: 1,
-    borderColor: "#c7d2fe",
-    marginBottom: 16,
-  },
-
-  adminPreviewTitle: {
-    fontSize: 18,
-    fontWeight: "900",
-    color: "#3730a3",
-  },
-
-  adminPreviewText: {
-    color: "#475569",
-    lineHeight: 20,
-    fontSize: 12,
-    marginTop: 8,
-  },
-
-  adminOpenButton: {
-    backgroundColor: "#4338ca",
-    padding: 13,
-    borderRadius: 14,
-    marginTop: 12,
-    alignItems: "center",
-  },
-
-  adminOpenText: {
-    color: "#fff",
-    fontWeight: "900",
-  },
-
-  membershipBanner: {
-    backgroundColor: "#fff",
-    borderRadius: 24,
-    padding: 17,
     flexDirection: "row",
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "#ddd6fe",
-    marginBottom: 18,
+    borderColor: "#dbeafe",
   },
 
-  membershipIcon: {
-    fontSize: 42,
+  featureIcon: {
+    fontSize: 34,
     marginRight: 14,
   },
 
-  membershipTitle: {
-    color: "#6d28d9",
+  featureTitle: {
+    fontSize: 17,
     fontWeight: "900",
-    fontSize: 12,
+    color: "#1e3a8a",
   },
 
-  membershipPrice: {
-    color: "#111827",
-    fontSize: 22,
-    fontWeight: "900",
-    marginTop: 2,
+  featureText: {
+    marginTop: 4,
+    color: "#475569",
+    lineHeight: 20,
   },
 
-  membershipSub: {
-    color: "#64748b",
-    fontSize: 11,
-    marginTop: 2,
-  },
-
-  categoryGrid: {
+  memberGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 10,
+    justifyContent: "space-between",
   },
 
-  categoryBox: {
-    backgroundColor: "#fff",
-    width: "30.8%",
-    minHeight: 112,
-    borderRadius: 20,
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 9,
+  memberCard: {
+    width: "48%",
+    backgroundColor: "#ffffff",
+    borderRadius: 18,
     borderWidth: 1,
     borderColor: "#e2e8f0",
+    padding: 16,
+    marginBottom: 12,
   },
 
-  categoryText: {
-    textAlign: "center",
-    color: "#334155",
-    fontWeight: "800",
-    fontSize: 10,
+  memberIcon: {
+    fontSize: 28,
+  },
+
+  memberTitle: {
+    fontSize: 15,
+    fontWeight: "900",
+    color: "#0f172a",
     marginTop: 7,
   },
 
-  footer: {
-    alignItems: "center",
-    paddingVertical: 25,
-  },
-
-  footerBrand: {
-    fontSize: 16,
-    fontWeight: "900",
-    color: "#111827",
-  },
-
-  footerText: {
-    fontSize: 10,
-    color: "#94a3b8",
-    marginTop: 4,
-  },
-
-  screenTitle: {
-    fontSize: 26,
-    fontWeight: "900",
-    color: "#111827",
-  },
-
-  screenSub: {
+  memberText: {
     color: "#64748b",
+    marginTop: 3,
     fontSize: 12,
-    marginTop: 4,
-    marginBottom: 14,
-  },
-
-  searchInput: {
-    backgroundColor: "#fff",
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: "#e2e8f0",
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    fontSize: 15,
-    marginBottom: 12,
-    color: "#111827",
-  },
-
-  chip: {
-    backgroundColor: "#fff",
-    borderWidth: 1,
-    borderColor: "#e2e8f0",
-    borderRadius: 18,
-    paddingHorizontal: 11,
-    paddingVertical: 9,
-    marginRight: 7,
-    flexDirection: "row",
-    alignItems: "center",
-  },
-
-  chipActive: {
-    backgroundColor: "#111827",
-    borderColor: "#111827",
-  },
-
-  chipIcon: {
-    fontSize: 14,
-    marginRight: 4,
-  },
-
-  chipText: {
-    color: "#475569",
-    fontSize: 11,
-    fontWeight: "800",
-  },
-
-  chipTextActive: {
-    color: "#fff",
   },
 
   card: {
-    backgroundColor: "#fff",
-    borderRadius: 22,
+    backgroundColor: "#ffffff",
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: "#e2e8f0",
     padding: 15,
     marginBottom: 12,
-    borderWidth: 1,
-    borderColor: "#e8edf5",
   },
 
   cardTop: {
     flexDirection: "row",
-    alignItems: "center",
   },
 
-  nameRow: {
-    flexDirection: "row",
-    alignItems: "flex-start",
+  cardIcon: {
+    width: 46,
+    height: 46,
+    borderRadius: 14,
+    backgroundColor: "#eff6ff",
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 11,
+  },
+
+  cardIconText: {
+    fontSize: 24,
   },
 
   cardTitle: {
-    flex: 1,
     fontSize: 16,
     fontWeight: "900",
-    color: "#111827",
+    color: "#0f172a",
   },
 
-  heart: {
-    fontSize: 24,
-    marginLeft: 8,
-  },
-
-  verified: {
-    color: "#059669",
-    fontSize: 9,
-    fontWeight: "900",
-    marginTop: 3,
+  cardTamil: {
+    color: "#2563eb",
+    fontSize: 12,
+    marginTop: 2,
+    fontWeight: "700",
   },
 
   cardLocation: {
     color: "#64748b",
-    fontSize: 11,
-    marginTop: 5,
-    lineHeight: 17,
-  },
-
-  description: {
-    color: "#475569",
     fontSize: 12,
-    marginTop: 12,
-    lineHeight: 18,
-  },
-
-  meta: {
-    color: "#64748b",
-    fontSize: 11,
     marginTop: 6,
   },
 
-  offer: {
-    backgroundColor: "#fef3c7",
-    borderRadius: 12,
-    padding: 9,
-    marginTop: 10,
-  },
-
-  offerText: {
-    color: "#92400e",
-    fontWeight: "800",
-    fontSize: 11,
-  },
-
-  actions: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 7,
-    marginTop: 12,
-  },
-
-  actionButton: {
-    backgroundColor: "#f1f5f9",
-    borderRadius: 13,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-    flexDirection: "row",
-    alignItems: "center",
-  },
-
-  actionGreen: {
-    backgroundColor: "#ecfdf5",
-  },
-
-  actionDanger: {
-    backgroundColor: "#fff1f2",
-  },
-
-  actionIcon: {
-    fontSize: 14,
-    marginRight: 4,
-  },
-
-  actionText: {
-    fontSize: 10,
-    fontWeight: "900",
-    color: "#334155",
-  },
-
-  bottomNav: {
-    position: "absolute",
-    left: 10,
-    right: 10,
-    bottom: 10,
-    height: 70,
-    backgroundColor: "#111827",
-    borderRadius: 23,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-around",
-    paddingHorizontal: 5,
-  },
-
-  navButton: {
-    alignItems: "center",
-    justifyContent: "center",
-    width: "24%",
-    height: 58,
-    borderRadius: 18,
-  },
-
-  navActive: {
-    backgroundColor: "#334155",
-  },
-
-  navIcon: {
-    fontSize: 20,
-  },
-
-  navText: {
-    color: "#94a3b8",
-    fontSize: 9,
-    fontWeight: "800",
-    marginTop: 2,
-  },
-
-  navTextActive: {
-    color: "#fff",
-  },
-
-  backButton: {
-    marginBottom: 16,
-  },
-
-  back: {
-    color: "#475569",
-    fontSize: 16,
-    fontWeight: "800",
-  },
-
-  authPage: {
-    flexGrow: 1,
-    padding: 20,
-    justifyContent: "center",
-    alignItems: "stretch",
-  },
-
-  authTitle: {
-    textAlign: "center",
-    fontSize: 25,
-    fontWeight: "900",
-    color: "#111827",
-    marginTop: 15,
-  },
-
-  authSub: {
-    textAlign: "center",
+  cardDescription: {
     color: "#64748b",
-    marginTop: 4,
-    marginBottom: 25,
-  },
-
-  label: {
-    color: "#334155",
-    fontSize: 11,
-    fontWeight: "900",
-    marginBottom: 6,
-  },
-
-  input: {
-    backgroundColor: "#fff",
-    borderWidth: 1,
-    borderColor: "#dbe3ee",
-    borderRadius: 15,
-    paddingHorizontal: 14,
-    paddingVertical: 13,
-    color: "#111827",
-    fontSize: 14,
-  },
-
-  textArea: {
-    minHeight: 110,
-    textAlignVertical: "top",
-  },
-
-  primaryButton: {
-    backgroundColor: "#111827",
-    borderRadius: 16,
-    padding: 15,
-    alignItems: "center",
-    marginTop: 4,
-  },
-
-  primaryButtonText: {
-    color: "#fff",
-    fontWeight: "900",
-    fontSize: 13,
-  },
-
-  switchButton: {
-    padding: 15,
-    alignItems: "center",
-  },
-
-  switchText: {
-    color: "#4f46e5",
-    fontWeight: "800",
-  },
-
-  ownerHero: {
-    backgroundColor: "#111827",
-    borderRadius: 28,
-    padding: 25,
-    alignItems: "center",
-    marginBottom: 18,
-  },
-
-  ownerTitle: {
-    color: "#fff",
-    fontSize: 20,
-    fontWeight: "900",
-    marginTop: 12,
-  },
-
-  ownerSub: {
-    color: "#cbd5e1",
-    marginTop: 4,
-  },
-
-  ownerStatus: {
-    backgroundColor: "#f5f3ff",
-    borderRadius: 22,
-    padding: 18,
-    borderWidth: 1,
-    borderColor: "#ddd6fe",
-    marginBottom: 18,
-  },
-
-  statusTitle: {
-    color: "#6d28d9",
-    fontWeight: "900",
-  },
-
-  statusValue: {
-    color: "#111827",
-    fontSize: 24,
-    fontWeight: "900",
+    fontSize: 12,
     marginTop: 5,
   },
 
-  statusText: {
-    color: "#64748b",
-    fontSize: 11,
-    marginTop: 2,
+  cardButtons: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    marginTop: 13,
   },
 
   smallButton: {
-    alignSelf: "flex-start",
-    backgroundColor: "#7c3aed",
-    paddingHorizontal: 13,
-    paddingVertical: 10,
-    borderRadius: 12,
-    marginTop: 10,
+    backgroundColor: "#f1f5f9",
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    marginRight: 6,
+    marginBottom: 6,
   },
 
   smallButtonText: {
-    color: "#fff",
-    fontWeight: "900",
+    color: "#334155",
     fontSize: 11,
+    fontWeight: "800",
   },
 
-  ownerGrid: {
+  editButton: {
+    backgroundColor: "#eff6ff",
+    borderWidth: 1,
+    borderColor: "#bfdbfe",
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    marginRight: 6,
+    marginBottom: 6,
+  },
+
+  editButtonText: {
+    color: "#1d4ed8",
+    fontSize: 11,
+    fontWeight: "800",
+  },
+
+  deleteButton: {
+    backgroundColor: "#fef2f2",
+    borderWidth: 1,
+    borderColor: "#fecaca",
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    marginBottom: 6,
+  },
+
+  deleteButtonText: {
+    color: "#dc2626",
+    fontSize: 11,
+    fontWeight: "800",
+  },
+
+  topBar: {
+    minHeight: 62,
+    backgroundColor: "#ffffff",
     flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 12,
-    marginBottom: 18,
+    alignItems: "center",
+    paddingHorizontal: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#e2e8f0",
   },
 
-  settingsBox: {
-    backgroundColor: "#fff",
-    borderRadius: 22,
-    padding: 18,
+  backBtn: {
+    width: 42,
+    height: 42,
+    borderRadius: 13,
+    backgroundColor: "#f1f5f9",
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 10,
+  },
+
+  backText: {
+    fontSize: 30,
+    color: "#0f172a",
+    marginTop: -4,
+  },
+
+  topTitle: {
+    flex: 1,
+    fontSize: 18,
+    fontWeight: "900",
+    color: "#0f172a",
+  },
+
+  addTop: {
+    width: 42,
+    height: 42,
+    borderRadius: 13,
+    backgroundColor: "#2563eb",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  addTopText: {
+    color: "#ffffff",
+    fontSize: 25,
+  },
+
+  directorySearch: {
+    margin: 14,
+    backgroundColor: "#ffffff",
+    borderRadius: 15,
     borderWidth: 1,
     borderColor: "#e2e8f0",
+    paddingHorizontal: 14,
+    flexDirection: "row",
+    alignItems: "center",
   },
 
-  settingsTitle: {
-    fontSize: 17,
-    fontWeight: "900",
-    marginBottom: 12,
+  directoryInput: {
+    flex: 1,
+    height: 48,
+    marginLeft: 8,
+    color: "#0f172a",
   },
 
-  settingRow: {
-    color: "#475569",
+  categoryRow: {
+    paddingHorizontal: 14,
+    paddingBottom: 8,
+  },
+
+  categoryChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#ffffff",
+    borderWidth: 1,
+    borderColor: "#e2e8f0",
+    borderRadius: 13,
+    paddingHorizontal: 11,
+    paddingVertical: 9,
+    marginRight: 7,
+  },
+
+  categoryChipActive: {
+    backgroundColor: "#2563eb",
+    borderColor: "#2563eb",
+  },
+
+  categoryChipIcon: {
+    marginRight: 5,
+  },
+
+  categoryChipText: {
+    color: "#334155",
+    fontSize: 11,
+    fontWeight: "800",
+  },
+
+  categoryChipTextActive: {
+    color: "#ffffff",
+  },
+
+  resultText: {
+    paddingHorizontal: 16,
     paddingVertical: 7,
+    color: "#64748b",
     fontSize: 12,
     fontWeight: "700",
   },
 
-  contentHero: {
+  emptyBox: {
+    backgroundColor: "#ffffff",
+    borderRadius: 20,
+    padding: 30,
     alignItems: "center",
-    paddingVertical: 18,
-    marginBottom: 8,
+    marginTop: 20,
   },
 
-  createButton: {
-    backgroundColor: "#4f46e5",
-    borderRadius: 17,
+  emptyIcon: {
+    fontSize: 38,
+  },
+
+  emptyTitle: {
+    marginTop: 10,
+    fontSize: 18,
+    fontWeight: "900",
+    color: "#0f172a",
+  },
+
+  emptyText: {
+    marginTop: 5,
+    color: "#64748b",
+    textAlign: "center",
+  },
+
+  emergencyHero: {
+    backgroundColor: "#fef2f2",
+    borderWidth: 1,
+    borderColor: "#fecaca",
+    borderRadius: 22,
+    padding: 20,
+    alignItems: "center",
+    marginBottom: 16,
+  },
+
+  emergencyHeroIcon: {
+    fontSize: 44,
+  },
+
+  emergencyHeroTitle: {
+    fontSize: 22,
+    fontWeight: "900",
+    color: "#991b1b",
+    marginTop: 7,
+  },
+
+  emergencyHeroText: {
+    textAlign: "center",
+    color: "#7f1d1d",
+    marginTop: 6,
+  },
+
+  emergencyCard: {
+    backgroundColor: "#ffffff",
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: "#fecaca",
     padding: 15,
+    marginBottom: 11,
+    flexDirection: "row",
     alignItems: "center",
-    marginBottom: 15,
   },
 
-  createButtonText: {
-    color: "#fff",
+  emergencyTitle: {
+    fontSize: 16,
+    fontWeight: "900",
+    color: "#0f172a",
+  },
+
+  emergencyLocation: {
+    marginTop: 4,
+    color: "#64748b",
+    fontSize: 12,
+  },
+
+  emergencyNumber: {
+    marginTop: 6,
+    color: "#dc2626",
+    fontSize: 18,
+    fontWeight: "900",
+  },
+
+  callEmergency: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: "#dc2626",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  callEmergencyText: {
+    fontSize: 24,
+  },
+
+  panelCard: {
+    backgroundColor: "#ffffff",
+    borderRadius: 22,
+    padding: 18,
+    borderWidth: 1,
+    borderColor: "#e2e8f0",
+  },
+
+  panelTitle: {
+    fontSize: 21,
+    fontWeight: "900",
+    color: "#0f172a",
+  },
+
+  panelText: {
+    color: "#64748b",
+    marginTop: 7,
+    lineHeight: 20,
+  },
+
+  segment: {
+    flexDirection: "row",
+    backgroundColor: "#f1f5f9",
+    borderRadius: 13,
+    padding: 4,
+    marginTop: 16,
+    marginBottom: 16,
+  },
+
+  segmentButton: {
+    flex: 1,
+    alignItems: "center",
+    paddingVertical: 10,
+    borderRadius: 10,
+  },
+
+  segmentActive: {
+    backgroundColor: "#ffffff",
+  },
+
+  segmentText: {
+    fontWeight: "800",
+    color: "#334155",
+  },
+
+  inputWrap: {
+    marginBottom: 14,
+  },
+
+  inputLabel: {
+    fontSize: 12,
+    fontWeight: "800",
+    color: "#334155",
+    marginBottom: 6,
+  },
+
+  input: {
+    backgroundColor: "#f8fafc",
+    borderWidth: 1,
+    borderColor: "#e2e8f0",
+    borderRadius: 13,
+    paddingHorizontal: 13,
+    height: 48,
+    color: "#0f172a",
+  },
+
+  inputMultiline: {
+    minHeight: 100,
+    textAlignVertical: "top",
+    paddingTop: 12,
+  },
+
+  primaryButton: {
+    backgroundColor: "#2563eb",
+    borderRadius: 14,
+    paddingVertical: 14,
+    alignItems: "center",
+    marginTop: 8,
+  },
+
+  primaryButtonText: {
+    color: "#ffffff",
+    fontWeight: "900",
+    fontSize: 14,
+  },
+
+  secondaryButton: {
+    backgroundColor: "#eff6ff",
+    borderWidth: 1,
+    borderColor: "#bfdbfe",
+    borderRadius: 14,
+    paddingVertical: 14,
+    alignItems: "center",
+    marginTop: 10,
+  },
+
+  secondaryButtonText: {
+    color: "#1d4ed8",
+    fontWeight: "900",
+  },
+
+  ownerBadge: {
+    alignSelf: "flex-start",
+    marginTop: 10,
+    marginBottom: 15,
+    backgroundColor: "#dcfce7",
+    color: "#166534",
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 9,
+    fontSize: 10,
+    fontWeight: "900",
+  },
+
+  settingsTitle: {
+    fontSize: 16,
+    fontWeight: "900",
+    color: "#0f172a",
+    marginTop: 8,
+    marginBottom: 5,
+  },
+
+  toggleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 13,
+    borderBottomWidth: 1,
+    borderBottomColor: "#f1f5f9",
+  },
+
+  toggleTitle: {
+    color: "#334155",
+    fontWeight: "700",
+  },
+
+  toggle: {
+    width: 48,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: "#cbd5e1",
+    padding: 3,
+    justifyContent: "center",
+  },
+
+  toggleOn: {
+    backgroundColor: "#2563eb",
+  },
+
+  toggleCircle: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: "#ffffff",
+  },
+
+  toggleCircleOn: {
+    alignSelf: "flex-end",
+  },
+
+  uploadButton: {
+    backgroundColor: "#f8fafc",
+    borderWidth: 1,
+    borderStyle: "dashed",
+    borderColor: "#94a3b8",
+    borderRadius: 14,
+    paddingVertical: 14,
+    alignItems: "center",
+    marginTop: 10,
+  },
+
+  uploadButtonText: {
+    color: "#334155",
     fontWeight: "900",
   },
 
   postCard: {
-    backgroundColor: "#fff",
-    borderRadius: 22,
-    padding: 17,
+    backgroundColor: "#ffffff",
+    borderRadius: 20,
     borderWidth: 1,
     borderColor: "#e2e8f0",
-    marginBottom: 12,
+    marginBottom: 15,
+    overflow: "hidden",
   },
 
-  postType: {
-    color: "#7c3aed",
-    fontSize: 10,
-    fontWeight: "900",
+  postHeader: {
+    padding: 14,
+    flexDirection: "row",
+    alignItems: "center",
   },
 
-  postTitle: {
-    color: "#111827",
-    fontSize: 18,
-    fontWeight: "900",
-    marginTop: 7,
-  },
-
-  postBody: {
-    color: "#475569",
-    lineHeight: 19,
-    marginTop: 7,
-    fontSize: 12,
-  },
-
-  imagePreview: {
-    backgroundColor: "#f1f5f9",
-    borderRadius: 16,
-    minHeight: 130,
+  postAvatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "#eff6ff",
     alignItems: "center",
     justifyContent: "center",
-    marginTop: 12,
-    padding: 15,
+    marginRight: 10,
   },
 
-  imagePreviewText: {
-    fontSize: 26,
+  postShop: {
+    fontWeight: "900",
+    color: "#0f172a",
   },
 
-  imageUrl: {
-    color: "#64748b",
-    fontSize: 9,
-    marginTop: 5,
-    textAlign: "center",
+  postDate: {
+    color: "#94a3b8",
+    fontSize: 11,
+    marginTop: 2,
+  },
+
+  postMedia: {
+    height: 240,
+    backgroundColor: "#0f172a",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  postMediaIcon: {
+    fontSize: 50,
+  },
+
+  postMediaText: {
+    color: "#ffffff",
+    fontSize: 11,
+    fontWeight: "900",
+    marginTop: 7,
+    letterSpacing: 1,
+  },
+
+  postCaption: {
+    paddingHorizontal: 15,
+    paddingTop: 13,
+    color: "#334155",
+    lineHeight: 20,
   },
 
   postLocation: {
+    paddingHorizontal: 15,
+    paddingTop: 8,
     color: "#64748b",
-    fontSize: 11,
-    marginTop: 10,
+    fontSize: 12,
   },
 
-  empty: {
-    alignItems: "center",
-    padding: 40,
-  },
-
-  emptyIcon: {
-    fontSize: 40,
-  },
-
-  emptyTitle: {
-    fontSize: 18,
-    fontWeight: "900",
-    marginTop: 10,
-  },
-
-  emptyText: {
-    color: "#64748b",
-    marginTop: 4,
-  },
-
-  typeRow: {
+  postActions: {
     flexDirection: "row",
-    gap: 8,
-    marginBottom: 18,
+    padding: 12,
   },
 
-  typeButton: {
-    flex: 1,
-    backgroundColor: "#fff",
-    borderWidth: 1,
-    borderColor: "#e2e8f0",
-    borderRadius: 14,
-    padding: 12,
+  postAction: {
+    backgroundColor: "#f1f5f9",
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+    borderRadius: 10,
+    marginRight: 7,
+  },
+
+  downloadButton: {
+    marginHorizontal: 14,
+    marginBottom: 14,
+    backgroundColor: "#eff6ff",
+    borderRadius: 11,
+    paddingVertical: 10,
     alignItems: "center",
   },
 
-  typeButtonActive: {
-    backgroundColor: "#111827",
-    borderColor: "#111827",
-  },
-
-  typeButtonText: {
-    color: "#475569",
-    fontSize: 11,
+  downloadText: {
+    color: "#1d4ed8",
     fontWeight: "800",
   },
 
-  typeButtonTextActive: {
-    color: "#fff",
-  },
-
-  prototypeNote: {
-    color: "#94a3b8",
-    fontSize: 10,
-    lineHeight: 16,
-    textAlign: "center",
-    marginTop: 14,
-  },
-
-  membershipPage: {
-    alignItems: "center",
-    backgroundColor: "#fff",
-    borderRadius: 28,
+  membershipHero: {
+    backgroundColor: "#2563eb",
+    borderRadius: 24,
     padding: 24,
-    borderWidth: 1,
-    borderColor: "#ddd6fe",
+    alignItems: "center",
+    marginBottom: 15,
   },
 
-  membershipBig: {
-    fontSize: 23,
-    fontWeight: "900",
-    color: "#111827",
+  membershipIcon: {
+    fontSize: 42,
   },
 
-  priceBig: {
-    fontSize: 52,
+  membershipTitle: {
+    color: "#ffffff",
+    fontSize: 21,
     fontWeight: "900",
-    color: "#7c3aed",
+    marginTop: 9,
+    textAlign: "center",
+  },
+
+  price: {
+    color: "#ffffff",
+    fontSize: 34,
+    fontWeight: "900",
     marginTop: 10,
   },
 
-  monthText: {
+  priceSmall: {
+    fontSize: 14,
+    fontWeight: "700",
+  },
+
+  membershipText: {
+    color: "#dbeafe",
+    textAlign: "center",
+    marginTop: 8,
+    lineHeight: 20,
+  },
+
+  paymentNote: {
     color: "#64748b",
-    fontWeight: "900",
-    letterSpacing: 2,
-    marginBottom: 18,
+    textAlign: "center",
+    fontSize: 11,
+    marginTop: 12,
+    lineHeight: 17,
   },
 
   benefit: {
-    width: "100%",
-    borderBottomWidth: 1,
-    borderBottomColor: "#f1f5f9",
-    paddingVertical: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 9,
+  },
+
+  benefitIcon: {
+    width: 25,
+    height: 25,
+    borderRadius: 13,
+    backgroundColor: "#dcfce7",
+    color: "#16a34a",
+    textAlign: "center",
+    lineHeight: 25,
+    fontWeight: "900",
+    marginRight: 9,
   },
 
   benefitText: {
@@ -3499,166 +3389,149 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
 
-  upiButton: {
-    width: "100%",
-    backgroundColor: "#16a34a",
-    borderRadius: 17,
-    padding: 16,
+  adminLoginCard: {
+    backgroundColor: "#ffffff",
+    borderRadius: 22,
+    padding: 22,
     alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#e2e8f0",
     marginTop: 20,
   },
 
-  upiText: {
-    color: "#fff",
+  adminLock: {
+    fontSize: 48,
+    marginBottom: 10,
+  },
+
+  adminDashboard: {
+    backgroundColor: "#0f172a",
+    borderRadius: 22,
+    padding: 20,
+    marginBottom: 14,
+  },
+
+  adminDashboardTitle: {
+    color: "#ffffff",
+    fontSize: 22,
     fontWeight: "900",
   },
 
-  adminHero: {
-    backgroundColor: "#111827",
-    borderRadius: 28,
-    padding: 24,
-    alignItems: "center",
-    marginBottom: 18,
-  },
-
-  adminHeroTitle: {
-    color: "#fff",
-    fontSize: 23,
-    fontWeight: "900",
-    marginTop: 10,
-  },
-
-  adminHeroSub: {
-    color: "#a7f3d0",
+  adminDashboardSub: {
+    color: "#93c5fd",
     fontSize: 11,
     fontWeight: "900",
     letterSpacing: 1.5,
-    marginTop: 5,
-  },
-
-  adminPowerGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 9,
-    marginBottom: 18,
-  },
-
-  powerCard: {
-    backgroundColor: "#fff",
-    width: "31.8%",
-    borderRadius: 17,
-    padding: 13,
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: "#e2e8f0",
-  },
-
-  powerIcon: {
-    fontSize: 25,
-  },
-
-  powerText: {
-    fontSize: 9,
-    color: "#334155",
-    fontWeight: "800",
-    textAlign: "center",
-    marginTop: 5,
-  },
-
-  adminForm: {
-    backgroundColor: "#fff",
-    borderRadius: 22,
-    padding: 17,
-    borderWidth: 1,
-    borderColor: "#e2e8f0",
-    marginBottom: 18,
-  },
-
-  adminFormTitle: {
-    fontSize: 18,
-    fontWeight: "900",
-    marginBottom: 15,
-  },
-
-  adminListing: {
-    backgroundColor: "#fff",
-    borderRadius: 17,
-    padding: 12,
-    marginBottom: 8,
-    flexDirection: "row",
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: "#e2e8f0",
-  },
-
-  adminListingName: {
-    fontWeight: "900",
-    color: "#111827",
-  },
-
-  adminListingInfo: {
-    color: "#64748b",
-    fontSize: 10,
     marginTop: 4,
   },
 
-  editMini: {
-    width: 38,
-    height: 38,
-    borderRadius: 12,
-    backgroundColor: "#eef2ff",
-    alignItems: "center",
-    justifyContent: "center",
-    marginLeft: 6,
+  statsRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 18,
   },
 
-  deleteMini: {
-    width: 38,
-    height: 38,
-    borderRadius: 12,
-    backgroundColor: "#fff1f2",
-    alignItems: "center",
-    justifyContent: "center",
-    marginLeft: 6,
+  statBox: {
+    width: "31%",
+    backgroundColor: "#1e293b",
+    borderRadius: 13,
+    padding: 11,
   },
 
-  profileHero: {
-    backgroundColor: "#fff",
-    borderRadius: 25,
-    padding: 25,
-    alignItems: "center",
-    marginBottom: 18,
-  },
-
-  profileName: {
-    fontSize: 24,
+  statValue: {
+    color: "#ffffff",
+    fontSize: 17,
     fontWeight: "900",
-    marginTop: 10,
   },
 
-  profileInfo: {
-    color: "#64748b",
-    marginTop: 5,
+  statTitle: {
+    color: "#94a3b8",
+    fontSize: 10,
+    marginTop: 3,
   },
 
-  dangerButton: {
-    backgroundColor: "#fff1f2",
+  adminActionGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+    marginBottom: 8,
+  },
+
+  adminAction: {
+    width: "31%",
+    backgroundColor: "#ffffff",
     borderWidth: 1,
-    borderColor: "#fecdd3",
+    borderColor: "#e2e8f0",
     borderRadius: 15,
-    padding: 15,
+    padding: 12,
+    marginBottom: 9,
+  },
+
+  adminActionIcon: {
+    fontSize: 22,
+  },
+
+  adminActionTitle: {
+    color: "#334155",
+    fontWeight: "800",
+    fontSize: 11,
+    marginTop: 7,
+  },
+
+  logoutButton: {
+    backgroundColor: "#fef2f2",
+    borderWidth: 1,
+    borderColor: "#fecaca",
+    borderRadius: 14,
+    paddingVertical: 14,
     alignItems: "center",
     marginTop: 15,
   },
 
-  dangerText: {
-    color: "#be123c",
+  logoutText: {
+    color: "#dc2626",
     fontWeight: "900",
   },
 
-  specialHeader: {
+  bottomNav: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: 70,
+    backgroundColor: "#ffffff",
+    borderTopWidth: 1,
+    borderTopColor: "#e2e8f0",
+    flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 10,
-    marginBottom: 15,
+    justifyContent: "space-around",
+    paddingHorizontal: 8,
+  },
+
+  navButton: {
+    minWidth: 65,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 6,
+    borderRadius: 12,
+  },
+
+  navButtonActive: {
+    backgroundColor: "#eff6ff",
+  },
+
+  navIcon: {
+    fontSize: 20,
+  },
+
+  navTitle: {
+    fontSize: 10,
+    color: "#64748b",
+    marginTop: 2,
+    fontWeight: "700",
+  },
+
+  navTitleActive: {
+    color: "#2563eb",
   },
 });
